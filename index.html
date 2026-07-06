@@ -523,11 +523,11 @@ details[open]>summary{color:#5856D6;}
       <div class="gcard">
         <div class="np-wrap">
           <input class="np-name" type="text" id="nameInput" placeholder="학생 이름"
-            maxlength="18" onkeydown="if(event.key==='Enter')focusPin()">
+            maxlength="16" onkeydown="if(event.key==='Enter')focusPin()">
           <div class="np-div"></div>
           <div class="np-pin-wrap">
             <input class="np-pin" type="password" id="pinInput"
-              placeholder="PIN" maxlength="6" inputmode="numeric" pattern="[0-9]*"
+              placeholder="PIN" maxlength="8" inputmode="numeric" pattern="[0-9]*"
               onkeydown="if(event.key==='Enter')addStudent()"
               oninput="this.value=this.value.replace(/\D/g,'')">
             <button class="eye-btn" onclick="toggleEye('pinInput')" type="button">👁</button>
@@ -571,7 +571,7 @@ details[open]>summary{color:#5856D6;}
         <div class="ifield">
           <label>학생 이름</label>
           <div class="if-row">
-            <input type="text" id="lookupName" placeholder="이름 입력" maxlength="20"
+            <input type="text" id="lookupName" placeholder="이름 입력" maxlength="16"
               onkeydown="if(event.key==='Enter')document.getElementById('lookupPin').focus()">
           </div>
         </div>
@@ -579,7 +579,7 @@ details[open]>summary{color:#5856D6;}
           <label>비밀번호 (PIN)</label>
           <div class="if-row">
             <input type="password" id="lookupPin" placeholder="4자리 숫자"
-              maxlength="4" inputmode="numeric" pattern="[0-9]*"
+              maxlength="8" inputmode="numeric" pattern="[0-9]*"
               oninput="this.value=this.value.replace(/\D/g,'')"
               onkeydown="if(event.key==='Enter')lookupRecord()"
               style="letter-spacing:4px;">
