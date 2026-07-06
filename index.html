@@ -253,11 +253,12 @@ body{
 .dtile.on .dtick{color:rgba(255,255,255,0.85);}
 
 /* ── DAY PANEL ── */
-.dpanel{background:#fff;border-radius:12px;overflow:hidden;margin:0 16px 8px;}
+.dpanel{background:#fff;border-radius:12px;overflow:visible;margin:0 16px 8px;}
 .dpanel-head{
   background:#007AFF;color:#fff;
   padding:13px 16px;font-size:15px;font-weight:600;
   display:flex;align-items:center;gap:8px;
+  border-radius:12px 12px 0 0;
 }
 .dpanel-dot{width:6px;height:6px;background:rgba(255,255,255,0.5);border-radius:50%;flex-shrink:0;}
 
@@ -305,6 +306,42 @@ body{
   cursor:pointer;min-height:44px;
 }
 .time-drop-row select:focus{border-color:#007AFF;}
+
+/* ── CUSTOM DROPDOWN (아래로 열림) ── */
+.seldrop{position:relative;flex:1;}
+.seldrop-btn{
+  width:100%;display:flex;align-items:center;justify-content:space-between;gap:6px;
+  border:1.5px solid #E5E5EA;border-radius:10px;padding:10px 12px;
+  background:#F9F9F9;font-family:inherit;font-size:15px;color:#1C1C1E;
+  cursor:pointer;min-height:44px;-webkit-tap-highlight-color:transparent;
+}
+.seldrop.open .seldrop-btn{border-color:#007AFF;}
+.seldrop.ph .seldrop-val{color:#C7C7CC;}
+.seldrop-chev{width:12px;height:8px;color:#AEAEB2;flex-shrink:0;transition:transform 0.18s;}
+.seldrop.open .seldrop-chev{transform:rotate(180deg);}
+.seldrop-list{
+  position:absolute;top:calc(100% + 4px);left:0;right:0;
+  background:#fff;border:1px solid #E5E5EA;border-radius:10px;
+  box-shadow:0 8px 24px rgba(0,0,0,0.14);
+  max-height:220px;overflow-y:auto;-webkit-overflow-scrolling:touch;
+  z-index:100;display:none;padding:4px;
+}
+.seldrop.open .seldrop-list{display:block;}
+.seldrop-item{
+  display:block;width:100%;text-align:left;border:none;background:transparent;
+  font-family:inherit;font-size:15px;color:#1C1C1E;padding:11px 10px;
+  border-radius:7px;cursor:pointer;-webkit-tap-highlight-color:transparent;
+}
+.seldrop-item:active,.seldrop-item:hover{background:#F2F2F7;}
+
+/* ── MEMO ── */
+.memo-area{
+  width:100%;box-sizing:border-box;border:none;outline:none;resize:vertical;
+  font-family:inherit;font-size:15px;color:#1C1C1E;line-height:1.6;
+  background:transparent;padding:14px 16px;min-height:88px;
+  -webkit-appearance:none;
+}
+.memo-area::placeholder{color:#C7C7CC;}
 .time-drop-colon{display:flex;align-items:center;font-size:18px;font-weight:700;color:#8E8E93;flex-shrink:0;}
 
 /* ── BIG CTA BUTTON ── */
@@ -512,6 +549,14 @@ details[open]>summary{color:#5856D6;}
           <div class="days-grid" id="daysGrid"></div>
         </div>
         <div id="dayForms"></div>
+
+        <div id="memoArea" style="display:none;">
+          <p class="sh" style="margin-top:20px;">④ 메모 <span class="sh-note">(선택)</span></p>
+          <div class="gcard">
+            <textarea class="memo-area" id="memoInput" placeholder="예) 알레르기, 준비물, 하원 시 유의사항 등 자유롭게 적어주세요" oninput="onMemoInput(this.value)"></textarea>
+          </div>
+        </div>
+
         <div id="submitArea" style="display:none;margin-top:8px;">
           <button class="cta cta-green" id="submitBtn" onclick="submitAll()">✅ 신청 완료</button>
         </div>
@@ -593,6 +638,9 @@ details[open]>summary{color:#5856D6;}
 const DAYS=['월요일','화요일','수요일','목요일','금요일'];
 const TIMES=['1부','2부','3부','4부','5부'];
 const METHODS=['차량','도보','개별','기타'];
+const HOURS=[1,2,3,4,5,6,7,8,9,10,11,12].map(h=>h+'시');
+const MINS=['00','10','20','30','40','50'].map(m=>m+'분');
+function escapeHtml(s){return String(s==null?'':s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');}
 
 /* ── API helper ── */
 async function api(path,{method='GET',body}={}){
@@ -616,7 +664,7 @@ function toggleEye(id){const el=document.getElementById(id);if(el)el.type=el.typ
 function focusPin(){document.getElementById('pinInput').focus();}
 
 /* ── FORM STATE ── */
-let students=[],selIdx=-1,selDays={},formSt={};
+let students=[],selIdx=-1,selDays={},formSt={},memoSt={};
 function cur(){return selIdx>=0?students[selIdx]:null;}
 
 /* ── STUDENT CRUD (in-memory, 제출 전까지) ── */
@@ -628,12 +676,12 @@ function addStudent(){
   if(!/^\d{4}$/.test(pin)){showE(err,'PIN은 숫자 4자리여야 합니다');return;}
   if(students.find(s=>s.name===name)){showE(err,'이미 추가된 이름입니다');return;}
   err.classList.remove('show');
-  students.push({name,pin});selDays[name]=[];formSt[name]={};
+  students.push({name,pin});selDays[name]=[];formSt[name]={};memoSt[name]='';
   document.getElementById('nameInput').value='';document.getElementById('pinInput').value='';
   renderChips();selStudent(students.length-1);
 }
 function removeStudent(i){
-  const{name}=students[i];students.splice(i,1);delete selDays[name];delete formSt[name];
+  const{name}=students[i];students.splice(i,1);delete selDays[name];delete formSt[name];delete memoSt[name];
   if(selIdx===i)selIdx=students.length>0?0:-1;else if(selIdx>i)selIdx--;
   renderChips();renderDaysSec();
 }
@@ -648,8 +696,11 @@ function renderChips(){
 function renderDaysSec(){
   const sec=document.getElementById('days-sec'),s=cur();
   if(!s){sec.style.display='none';return;}
-  sec.style.display='';renderDays();renderDayForms();
+  sec.style.display='';
+  const mi=document.getElementById('memoInput');if(mi)mi.value=(memoSt[s.name]||'');
+  renderDays();renderDayForms();
 }
+function onMemoInput(v){const s=cur();if(s)memoSt[s.name]=v;}
 function renderDays(){
   const s=cur();if(!s)return;
   const on=selDays[s.name]||[];
@@ -673,9 +724,10 @@ function toggleDay(d){
 
 /* ── DAY FORMS ── */
 function renderDayForms(){
-  const s=cur(),cont=document.getElementById('dayForms'),sub=document.getElementById('submitArea');
-  if(!s||!selDays[s.name]?.length){cont.innerHTML='';sub.style.display='none';return;}
+  const s=cur(),cont=document.getElementById('dayForms'),sub=document.getElementById('submitArea'),mem=document.getElementById('memoArea');
+  if(!s||!selDays[s.name]?.length){cont.innerHTML='';sub.style.display='none';if(mem)mem.style.display='none';return;}
   cont.innerHTML=selDays[s.name].map(d=>buildDF(d,s.name)).join('');sub.style.display='';
+  if(mem){mem.style.display='';const mi=document.getElementById('memoInput');if(mi)mi.value=(memoSt[s.name]||'');}
 }
 function buildDF(d,sn){
   const fd=(formSt[sn]||{})[d]||{},uid=d.replace('요일','');
@@ -695,15 +747,9 @@ function buildDF(d,sn){
     <div class="pfield">
       <div class="pfield-lbl">학교 하교 시간</div>
       <div class="time-drop-row">
-        <select onchange="setTx('${d}','schoolHour',this.value)">
-          <option value="">시간</option>
-          ${[1,2,3,4,5,6,7,8,9,10,11,12].map(h=>`<option value="${h}시" ${(fd.schoolHour||'')===(h+'시')?'selected':''} >${h}시</option>`).join('')}
-        </select>
+        ${seldropHTML(d,'schoolHour','시간',HOURS,fd.schoolHour,'form')}
         <span class="time-drop-colon">:</span>
-        <select onchange="setTx('${d}','schoolMin',this.value)">
-          <option value="">분</option>
-          ${['00','10','20','30','40','50'].map(m=>`<option value="${m}분" ${(fd.schoolMin||'')===m+'분'?'selected':''} >${m}분</option>`).join('')}
-        </select>
+        ${seldropHTML(d,'schoolMin','분',MINS,fd.schoolMin,'form')}
       </div>
     </div>
     <div class="pfield" id="pf_a_${uid}">
@@ -736,6 +782,35 @@ function setTx(d,k,v){
   formSt[s.name][d][k]=v;
 }
 
+/* ── 커스텀 드롭다운(항상 아래로 열림) ── */
+function seldropHTML(day,key,placeholder,options,current,mode){
+  const val=current||'';
+  return `<div class="seldrop${val?'':' ph'}">
+    <button type="button" class="seldrop-btn" onclick="dropToggle(this)">
+      <span class="seldrop-val">${val||placeholder}</span>
+      <svg class="seldrop-chev" viewBox="0 0 12 8" fill="none"><path d="M1 1l5 5 5-5" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
+    </button>
+    <div class="seldrop-list">
+      ${options.map(o=>`<button type="button" class="seldrop-item" onclick="dropPick(this,'${day}','${key}','${o}','${mode}')">${o}</button>`).join('')}
+    </div>
+  </div>`;
+}
+function dropToggle(btn){
+  const wrap=btn.closest('.seldrop');
+  const open=wrap.classList.contains('open');
+  document.querySelectorAll('.seldrop.open').forEach(el=>el.classList.remove('open'));
+  if(!open)wrap.classList.add('open');
+}
+function dropPick(btn,day,key,val,mode){
+  if(mode==='edit')setETx(day,key,val);else setTx(day,key,val);
+  const wrap=btn.closest('.seldrop');
+  wrap.querySelector('.seldrop-val').textContent=val;
+  wrap.classList.remove('ph');wrap.classList.remove('open');
+}
+document.addEventListener('click',function(e){
+  if(!e.target.closest('.seldrop'))document.querySelectorAll('.seldrop.open').forEach(el=>el.classList.remove('open'));
+});
+
 /* ── 요일별 폼 -> 서버 payload ── */
 function buildPayloadDays(state){
   return Object.keys(state).map(d=>{const fd=state[d]||{};
@@ -760,10 +835,10 @@ async function submitAll(){
   const btn=document.getElementById('submitBtn');
   btn.disabled=true;btn.textContent='제출 중…';
   try{
-    const r=await api('/api/records',{method:'POST',body:{name:s.name,pin:s.pin,days:payloadDays}});
+    const r=await api('/api/records',{method:'POST',body:{name:s.name,pin:s.pin,memo:memoSt[s.name]||'',days:payloadDays}});
     openDoneModal();
     if(r.overwritten&&r.overwritten.length)setTimeout(()=>toast('기존 '+r.overwritten.join(', ')+' 신청을 새 내용으로 변경했어요','ok'),400);
-    selDays[s.name]=[];formSt[s.name]={};renderDays();renderDayForms();
+    selDays[s.name]=[];formSt[s.name]={};memoSt[s.name]='';renderDays();renderDayForms();
   }catch(e){toast('⚠️ '+e.message);}
   finally{btn.disabled=false;btn.textContent='✅ 신청 완료';}
 }
@@ -796,16 +871,17 @@ async function lookupRecord(){
           <div class="rloc">등원: ${r.등원장소||'-'} &nbsp;·&nbsp; 하원: ${r.하원장소||'-'}</div>
           ${r.학교하교시간?`<div class="rloc" style="margin-top:2px;">🏫 하교 시간: ${r.학교하교시간.replace(':','  ')}</div>`:''}
         </div>`).join('')
+      +(lookupRows[0].메모?`<div class="rcard" style="background:#FFFDF3;border-color:rgba(180,140,0,0.18);"><div class="rcard-day">📝 메모</div><div class="rloc" style="white-space:pre-wrap;color:#5A4A00;">${escapeHtml(lookupRows[0].메모)}</div></div>`:'')
       +`<button class="cta cta-blue" style="margin:8px 0 0;" onclick="openEdit()">✏️ 수정하기</button>`;
   }catch(e){showE(err,e.message);resEl.style.display='none';}
   finally{btn.disabled=false;btn.textContent='조회하기';}
 }
 
 /* ── EDIT ── */
-let editName='',editPin='',editSt={};
+let editName='',editPin='',editSt={},editMemo='';
 function openEdit(){
   if(!lookupRows.length)return;
-  editName=lookupRows[0].이름;editPin=lookupRows[0].pin;
+  editName=lookupRows[0].이름;editPin=lookupRows[0].pin;editMemo=lookupRows[0].메모||'';
   editSt={};lookupRows.forEach(r=>{const st=(r.학교하교시간||'').split(':');editSt[r.요일]={time:r.희망수업시간,arrLoc:r.등원장소,schoolHour:st[0]||'',schoolMin:st[1]||'',arrMethod:r.등원방법,depLoc:r.하원장소,depMethod:r.하원방법};});
   document.getElementById('edit-nav-title').textContent=`${editName} 수정`;
   renderEditForms();showPage('edit');
@@ -830,15 +906,9 @@ function renderEditForms(){
       <div class="pfield">
         <div class="pfield-lbl">학교 하교 시간</div>
         <div class="time-drop-row">
-          <select onchange="setETx('${d}','schoolHour',this.value)">
-            <option value="">시간</option>
-            ${[1,2,3,4,5,6,7,8,9,10,11,12].map(h=>`<option value="${h}시" ${(fd.schoolHour||'')===(h+'시')?'selected':''} >${h}시</option>`).join('')}
-          </select>
+          ${seldropHTML(d,'schoolHour','시간',HOURS,fd.schoolHour,'edit')}
           <span class="time-drop-colon">:</span>
-          <select onchange="setETx('${d}','schoolMin',this.value)">
-            <option value="">분</option>
-            ${['00','10','20','30','40','50'].map(m=>`<option value="${m}분" ${(fd.schoolMin||'')===m+'분'?'selected':''} >${m}분</option>`).join('')}
-          </select>
+          ${seldropHTML(d,'schoolMin','분',MINS,fd.schoolMin,'edit')}
         </div>
       </div>
       <div class="pfield" id="ef_a_${uid}">
@@ -856,7 +926,9 @@ function renderEditForms(){
         <div class="perr">하원 방법을 선택해 주세요</div>
       </div>
     </div>`;
-  }).join('');
+  }).join('')
+  +`<p class="sh" style="margin-top:20px;">메모 <span class="sh-note">(선택)</span></p>
+    <div class="gcard"><textarea class="memo-area" id="editMemoInput" placeholder="예) 알레르기, 준비물, 하원 시 유의사항 등 자유롭게 적어주세요" oninput="editMemo=this.value">${escapeHtml(editMemo)}</textarea></div>`;
 }
 function setEOpt(d,k,v,btn){
   if(!editSt[d])editSt[d]={};editSt[d][k]=v;
@@ -876,7 +948,7 @@ async function saveEdit(){
   const payloadDays=buildPayloadDays(editSt);
   const btn=document.getElementById('editSaveBtn');btn.disabled=true;btn.textContent='저장 중…';
   try{
-    await api('/api/edit',{method:'POST',body:{name:editName,pin:editPin,days:payloadDays}});
+    await api('/api/edit',{method:'POST',body:{name:editName,pin:editPin,memo:editMemo||'',days:payloadDays}});
     toast('✅ 수정이 저장되었습니다','ok');
     showPage('main');mainTab('lookup',document.querySelectorAll('.seg-btn')[1]);
     lookupRecord();

@@ -42,5 +42,6 @@ export function toRecord(r) {
     등원방법: r.arrive_method || '',
     하원장소: r.depart_place || '',
     하원방법: r.depart_method || '',
+    메모: r.memo || '',
   };
 }

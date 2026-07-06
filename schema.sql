@@ -12,6 +12,7 @@ CREATE TABLE IF NOT EXISTS records (
   arrive_method TEXT NOT NULL DEFAULT '',   -- 등원 방법
   depart_place  TEXT NOT NULL DEFAULT '',   -- 하원 장소
   depart_method TEXT NOT NULL DEFAULT '',   -- 하원 방법
+  memo          TEXT NOT NULL DEFAULT '',   -- 자유 메모
   created_at    TIMESTAMPTZ NOT NULL DEFAULT now()
 );
 

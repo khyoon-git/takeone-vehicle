@@ -15,6 +15,7 @@ export default async function handler(req, res) {
       const body = await readBody(req);
       const name = String(body.name || '').trim();
       const pin = String(body.pin || '').trim();
+      const memo = String(body.memo || '');
       const days = Array.isArray(body.days) ? body.days : [];
 
       if (!name) return res.status(400).json({ error: '이름이 필요합니다' });
@@ -30,9 +31,9 @@ export default async function handler(req, res) {
         await sql`DELETE FROM records WHERE name=${name} AND day=${day}`;
         await sql`
           INSERT INTO records
-            (name, pin, day, class_time, arrive_place, school_time, arrive_method, depart_place, depart_method)
+            (name, pin, day, class_time, arrive_place, school_time, arrive_method, depart_place, depart_method, memo)
           VALUES
-            (${name}, ${pin}, ${day}, ${d.time || ''}, ${d.arrLoc || ''}, ${d.schoolTime || ''}, ${d.arrMethod || ''}, ${d.depLoc || ''}, ${d.depMethod || ''})
+            (${name}, ${pin}, ${day}, ${d.time || ''}, ${d.arrLoc || ''}, ${d.schoolTime || ''}, ${d.arrMethod || ''}, ${d.depLoc || ''}, ${d.depMethod || ''}, ${memo})
         `;
       }
       return res.status(200).json({ ok: true, overwritten });

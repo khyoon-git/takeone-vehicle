@@ -536,7 +536,7 @@ details[open]>summary{color:#5856D6;}
       <div style="padding:0 16px;">
         <div class="tscroll">
           <table>
-            <thead><tr><th>#</th><th>이름</th><th>요일</th><th>수업</th><th>등원장소</th><th>하교시간</th><th>등원방법</th><th>하원장소</th><th>하원방법</th><th></th></tr></thead>
+            <thead><tr><th>#</th><th>이름</th><th>요일</th><th>수업</th><th>등원장소</th><th>하교시간</th><th>등원방법</th><th>하원장소</th><th>하원방법</th><th>메모</th><th></th></tr></thead>
             <tbody id="adminTbody"></tbody>
           </table>
         </div>
@@ -628,7 +628,7 @@ function renderAdminTable(){
   const tb=document.getElementById('adminTbody'),em=document.getElementById('adminEmpty');
   if(!list.length){tb.innerHTML='';em.style.display='';return;}
   em.style.display='none';
-  tb.innerHTML=list.map((r,i)=>`<tr><td>${i+1}</td><td><strong>${r.이름}</strong></td><td>${r.요일}</td><td>${r.희망수업시간}</td><td>${r.등원장소||'-'}</td><td>${r.학교하교시간||'-'}</td><td>${r.등원방법||'-'}</td><td>${r.하원장소||'-'}</td><td>${r.하원방법||'-'}</td><td><button class="btn btn-red btn-sm" onclick="adminDel(${r.id},'${(r.이름||'').replace(/'/g,"\\'")}','${r.요일}')">삭제</button></td></tr>`).join('');
+  tb.innerHTML=list.map((r,i)=>`<tr><td>${i+1}</td><td><strong>${escapeHtml(r.이름)}</strong></td><td>${r.요일}</td><td>${r.희망수업시간}</td><td>${escapeHtml(r.등원장소)||'-'}</td><td>${r.학교하교시간||'-'}</td><td>${r.등원방법||'-'}</td><td>${escapeHtml(r.하원장소)||'-'}</td><td>${r.하원방법||'-'}</td><td style="white-space:pre-wrap;max-width:220px;">${escapeHtml(r.메모)||'-'}</td><td><button class="btn btn-red btn-sm" onclick="adminDel(${r.id},'${(r.이름||'').replace(/'/g,"\\'")}','${r.요일}')">삭제</button></td></tr>`).join('');
 }
 
 /* ── DELETE (개별/전체) ── */
@@ -649,9 +649,9 @@ async function clearAll(){
 function exportExcel(){
   if(!records.length)return toast('신청 내역이 없습니다');
   const sorted=[...records].sort((a,b)=>a.이름!==b.이름?a.이름.localeCompare(b.이름,'ko'):DAYS.indexOf(a.요일)-DAYS.indexOf(b.요일));
-  const data=sorted.map((r,i)=>({번호:i+1,이름:r.이름,요일:r.요일,희망수업시간:r.희망수업시간,등원장소:r.등원장소||'',학교하교시간:r.학교하교시간||'',등원방법:r.등원방법||'',하원장소:r.하원장소||'',하원방법:r.하원방법||''}));
+  const data=sorted.map((r,i)=>({번호:i+1,이름:r.이름,요일:r.요일,희망수업시간:r.희망수업시간,등원장소:r.등원장소||'',학교하교시간:r.학교하교시간||'',등원방법:r.등원방법||'',하원장소:r.하원장소||'',하원방법:r.하원방법||'',메모:r.메모||''}));
   const wb=XLSX.utils.book_new(),ws=XLSX.utils.json_to_sheet(data);
-  ws['!cols']=[{wch:5},{wch:10},{wch:8},{wch:12},{wch:18},{wch:14},{wch:8},{wch:18},{wch:8}];
+  ws['!cols']=[{wch:5},{wch:10},{wch:8},{wch:12},{wch:18},{wch:14},{wch:8},{wch:18},{wch:8},{wch:30}];
   XLSX.utils.book_append_sheet(wb,ws,'차량신청');
   const t=new Date(),fn=`차량신청_${t.getFullYear()}${String(t.getMonth()+1).padStart(2,'0')}${String(t.getDate()).padStart(2,'0')}.xlsx`;
   XLSX.writeFile(wb,fn);toast('📊 엑셀 다운로드 완료','ok');
@@ -675,6 +675,7 @@ function uiConfirm(msg,okLabel='확인',title='확인'){
 }
 
 /* ── UTILS ── */
+function escapeHtml(s){return String(s==null?'':s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');}
 function showE(el,msg){el.textContent=msg;el.classList.add('show');}
 let _tt;
 function toast(msg,type=''){const el=document.getElementById('toast');el.textContent=msg;el.className='toast show'+(type?' '+type:'');clearTimeout(_tt);_tt=setTimeout(()=>el.className='toast',2800);}
