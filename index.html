@@ -521,24 +521,31 @@ details[open]>summary{color:#5856D6;}
     <div id="tab-form" class="wrap">
       <p class="sh">① 학생 정보</p>
       <div class="gcard">
-        <div class="np-wrap">
-          <input class="np-name" type="text" id="nameInput" placeholder="학생 이름"
-            maxlength="12" onkeydown="if(event.key==='Enter')focusPin()">
-          <div class="np-div"></div>
-          <div class="np-pin-wrap">
-            <input class="np-pin" type="password" id="pinInput"
-              placeholder="PIN" maxlength="12" inputmode="numeric" pattern="[0-9]*"
-              onkeydown="if(event.key==='Enter')addStudent()"
-              oninput="this.value=this.value.replace(/\D/g,'')">
-            <button class="eye-btn" onclick="toggleEye('pinInput')" type="button">👁</button>
+        <div class="ifield">
+          <label>학생 이름</label>
+          <div class="if-row">
+            <input type="text" id="nameInput" placeholder="이름 입력" maxlength="20"
+              onkeydown="if(event.key==='Enter')focusPin()">
           </div>
-          <div class="np-div"></div>
-          <button class="np-add" onclick="addStudent()">추가</button>
+        </div>
+        <div class="ifield">
+          <label>비밀번호 (PIN)</label>
+          <div class="if-row">
+            <input type="password" id="pinInput" placeholder="4자리 숫자"
+              maxlength="4" inputmode="numeric" pattern="[0-9]*"
+              oninput="this.value=this.value.replace(/\D/g,'')"
+              onkeydown="if(event.key==='Enter')addStudent()"
+              style="letter-spacing:4px;">
+            <button class="eye-btn" style="position:static;margin-left:4px;" onclick="toggleEye('pinInput')" type="button">👁</button>
+          </div>
         </div>
         <div class="emsg" id="err-student"></div>
         <div class="info-strip">
           <span class="ii">ℹ️</span>
           <span>PIN 4자리 설정 시 나중에 신청을 수정할 수 있습니다</span>
+        </div>
+        <div style="padding:12px 16px 14px;">
+          <button class="btn btn-blue btn-full" onclick="addStudent()">학생 추가</button>
         </div>
         <div class="chips" id="chips"></div>
       </div>
@@ -571,7 +578,7 @@ details[open]>summary{color:#5856D6;}
         <div class="ifield">
           <label>학생 이름</label>
           <div class="if-row">
-            <input type="text" id="lookupName" placeholder="이름 입력" maxlength="12"
+            <input type="text" id="lookupName" placeholder="이름 입력" maxlength="20"
               onkeydown="if(event.key==='Enter')document.getElementById('lookupPin').focus()">
           </div>
         </div>
@@ -579,7 +586,7 @@ details[open]>summary{color:#5856D6;}
           <label>비밀번호 (PIN)</label>
           <div class="if-row">
             <input type="password" id="lookupPin" placeholder="4자리 숫자"
-              maxlength="12" inputmode="numeric" pattern="[0-9]*"
+              maxlength="4" inputmode="numeric" pattern="[0-9]*"
               oninput="this.value=this.value.replace(/\D/g,'')"
               onkeydown="if(event.key==='Enter')lookupRecord()"
               style="letter-spacing:4px;">
@@ -928,7 +935,7 @@ function renderEditForms(){
     </div>`;
   }).join('')
   +`<p class="sh" style="margin-top:20px;">메모 <span class="sh-note">(선택)</span></p>
-    <div class="gcard"><textarea class="memo-area" id="editMemoInput" placeholder="예) 알레르기, 준비물, 하원 시 유의사항 등 자유롭게 적어주세요" oninput="editMemo=this.value">${escapeHtml(editMemo)}</textarea></div>`;
+    <div class="gcard"><textarea class="memo-area" id="editMemoInput" placeholder="예) 방학 등하원 기간 및 전달사항 등을 자유롭게 적어주세요" oninput="editMemo=this.value">${escapeHtml(editMemo)}</textarea></div>`;
 }
 function setEOpt(d,k,v,btn){
   if(!editSt[d])editSt[d]={};editSt[d][k]=v;
