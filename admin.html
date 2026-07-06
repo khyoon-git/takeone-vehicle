@@ -93,6 +93,9 @@ td.days{white-space:normal;line-height:2;}
 td.days .badge{margin:2px 4px 2px 0;}
 .pdv{display:inline-block;margin-right:10px;white-space:nowrap;}
 .pdv b{color:#4338CA;font-weight:800;margin-right:3px;}
+tbody tr.grp-start td{border-top:2px solid #E2E8F0;}
+td.nm,td.num{vertical-align:top;}
+td.nm{background:#FCFCFF;}
 .empty{text-align:center;padding:64px 20px;color:var(--muted);}
 .empty-ico{font-size:44px;margin-bottom:10px;}
 
@@ -265,15 +268,6 @@ function renderSummary(){
   document.getElementById('sum-students').textContent=new Set(records.map(r=>r.이름)).size;
   DAYS.forEach((d,idx)=>{const el=document.getElementById('sum-'+idx);if(el)el.textContent=records.filter(r=>r.요일===d).length;});
 }
-let renderedGroups=[];
-function summarizeField(recs,field,isTime){
-  const vals=recs.map(r=>{let v=(r[field]||'').trim();if(isTime&&v)v=v.replace(':','  ');return{d:(r.요일||'').replace('요일',''),v};});
-  const nonEmpty=vals.filter(x=>x.v);
-  if(!nonEmpty.length)return '-';
-  const uniq=[...new Set(nonEmpty.map(x=>x.v))];
-  if(uniq.length===1)return escapeHtml(uniq[0]);
-  return nonEmpty.map(x=>`<span class="pdv"><b>${x.d}</b>${escapeHtml(x.v)}</span>`).join('');
-}
 function renderAdminTable(){
   const name=document.getElementById('filterName').value.trim().toLowerCase();
   const day=document.getElementById('filterDay').value;
@@ -282,38 +276,40 @@ function renderAdminTable(){
   records.forEach(r=>{const key=r.이름+'\u0000'+r.pin;if(!map.has(key))map.set(key,{이름:r.이름,pin:r.pin,recs:[]});map.get(key).recs.push(r);});
   let groups=[...map.values()];
   groups.forEach(g=>g.recs.sort((a,b)=>DAYS.indexOf(a.요일)-DAYS.indexOf(b.요일)));
-  groups=groups.filter(g=>(!name||g.이름.toLowerCase().includes(name))&&(!day||g.recs.some(r=>r.요일===day)));
+  groups=groups.filter(g=>(!name||g.이름.toLowerCase().includes(name)));
+  if(day){groups=groups.map(g=>({이름:g.이름,pin:g.pin,recs:g.recs.filter(r=>r.요일===day)})).filter(g=>g.recs.length);}
   groups.sort((a,b)=>a.이름.localeCompare(b.이름,'ko'));
-  renderedGroups=groups;
   const tb=document.getElementById('adminTbody'),em=document.getElementById('adminEmpty');
   document.getElementById('shown-count').textContent=groups.length;
   if(!groups.length){tb.innerHTML='';em.style.display='';return;}
   em.style.display='none';
-  tb.innerHTML=groups.map((g,i)=>{
-    const dayChips=g.recs.map(r=>`<span class="badge badge-day">${(r.요일||'').replace('요일','')}</span>`).join('');
-    return `<tr>`
-      +`<td class="num">${i+1}</td>`
-      +`<td class="nm">${escapeHtml(g.이름)}</td>`
-      +`<td class="days">${dayChips}</td>`
-      +`<td>${summarizeField(g.recs,'희망수업시간')}</td>`
-      +`<td>${summarizeField(g.recs,'등원장소')}</td>`
-      +`<td>${summarizeField(g.recs,'학교하교시간',true)}</td>`
-      +`<td>${summarizeField(g.recs,'등원방법')}</td>`
-      +`<td>${summarizeField(g.recs,'하원장소')}</td>`
-      +`<td>${summarizeField(g.recs,'하원방법')}</td>`
-      +`<td class="memo">${summarizeField(g.recs,'메모')}</td>`
-      +`<td><button class="btn btn-red btn-sm" onclick="adminDelGroup(${i})">삭제</button></td>`
-      +`</tr>`;
-  }).join('');
+  let html='';
+  groups.forEach((g,i)=>{
+    const n=g.recs.length;
+    g.recs.forEach((r,j)=>{
+      const school=r.학교하교시간?r.학교하교시간.replace(':','  '):'-';
+      const rest=`<td><span class="badge badge-day">${(r.요일||'').replace('요일','')}</span></td>`
+        +`<td><span class="badge badge-time">${escapeHtml(r.희망수업시간)||'-'}</span></td>`
+        +`<td>${escapeHtml(r.등원장소)||'-'}</td>`
+        +`<td>${school}</td>`
+        +`<td>${r.등원방법?`<span class="badge badge-m">${escapeHtml(r.등원방법)}</span>`:'-'}</td>`
+        +`<td>${escapeHtml(r.하원장소)||'-'}</td>`
+        +`<td>${r.하원방법?`<span class="badge badge-m">${escapeHtml(r.하원방법)}</span>`:'-'}</td>`
+        +`<td class="memo">${escapeHtml(r.메모)||'-'}</td>`
+        +`<td><button class="btn btn-red btn-sm" onclick="adminDel(${r.id},'${(r.이름||'').replace(/'/g,"\\'")}','${r.요일}')">삭제</button></td>`;
+      if(j===0){
+        html+=`<tr class="grp-start"><td class="num" rowspan="${n}">${i+1}</td><td class="nm" rowspan="${n}">${escapeHtml(g.이름)}</td>${rest}</tr>`;
+      }else{
+        html+=`<tr>${rest}</tr>`;
+      }
+    });
+  });
+  tb.innerHTML=html;
 }
-async function adminDelGroup(idx){
-  const g=renderedGroups[idx];if(!g)return;
-  const daysText=g.recs.map(r=>(r.요일||'').replace('요일','')).join('·');
-  if(!await uiConfirm(`<strong>${escapeHtml(g.이름)}</strong> (${daysText})<br>이 학생의 신청을 모두 삭제할까요?`,'삭제하기'))return;
-  try{
-    for(const r of g.recs){await api('/api/delete',{method:'POST',auth:true,body:{mode:'one',id:r.id}});}
-    await loadRecords();toast('삭제되었습니다');
-  }catch(e){if(e.status===401){adminLogout();}else toast('⚠️ '+e.message);}
+async function adminDel(id,name,day){
+  if(!await uiConfirm(`<strong>${escapeHtml(name)}</strong> / ${day}<br>삭제할까요?`,'삭제하기'))return;
+  try{await api('/api/delete',{method:'POST',auth:true,body:{mode:'one',id}});await loadRecords();toast('삭제되었습니다');}
+  catch(e){if(e.status===401){adminLogout();}else toast('⚠️ '+e.message);}
 }
 
 /* ── DELETE (개별/전체) ── */
@@ -328,27 +324,10 @@ async function clearAll(){
 /* ── EXCEL ── */
 function exportExcel(){
   if(!records.length)return toast('신청 내역이 없습니다');
-  // 학생(이름+PIN)별로 묶기
-  const map=new Map();
-  records.forEach(r=>{const key=r.이름+'\u0000'+r.pin;if(!map.has(key))map.set(key,{이름:r.이름,pin:r.pin,recs:[]});map.get(key).recs.push(r);});
-  const groups=[...map.values()].sort((a,b)=>a.이름.localeCompare(b.이름,'ko'));
-  const CHECK='✓';
-  const data=groups.map((g,i)=>{
-    const dset=new Set(g.recs.map(r=>r.요일));
-    const memoRec=g.recs.find(r=>(r.메모||'').trim());
-    return {
-      번호:i+1,
-      이름:g.이름,
-      월:dset.has('월요일')?CHECK:'',
-      화:dset.has('화요일')?CHECK:'',
-      수:dset.has('수요일')?CHECK:'',
-      목:dset.has('목요일')?CHECK:'',
-      금:dset.has('금요일')?CHECK:'',
-      메모:memoRec?memoRec.메모:''
-    };
-  });
+  const sorted=[...records].sort((a,b)=>a.이름!==b.이름?a.이름.localeCompare(b.이름,'ko'):DAYS.indexOf(a.요일)-DAYS.indexOf(b.요일));
+  const data=sorted.map((r,i)=>({번호:i+1,이름:r.이름,요일:r.요일,희망수업시간:r.희망수업시간,등원장소:r.등원장소||'',학교하교시간:r.학교하교시간||'',등원방법:r.등원방법||'',하원장소:r.하원장소||'',하원방법:r.하원방법||'',메모:r.메모||''}));
   const wb=XLSX.utils.book_new(),ws=XLSX.utils.json_to_sheet(data);
-  ws['!cols']=[{wch:5},{wch:12},{wch:5},{wch:5},{wch:5},{wch:5},{wch:5},{wch:32}];
+  ws['!cols']=[{wch:5},{wch:10},{wch:8},{wch:12},{wch:18},{wch:14},{wch:8},{wch:18},{wch:8},{wch:30}];
   XLSX.utils.book_append_sheet(wb,ws,'차량신청');
   const t=new Date(),fn=`차량신청_${t.getFullYear()}${String(t.getMonth()+1).padStart(2,'0')}${String(t.getDate()).padStart(2,'0')}.xlsx`;
   XLSX.writeFile(wb,fn);toast('📊 엑셀 다운로드 완료','ok');
