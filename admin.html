@@ -2,552 +2,187 @@
 <html lang="ko">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<meta name="apple-mobile-web-app-capable" content="yes">
-<meta name="apple-mobile-web-app-status-bar-style" content="default">
-<meta name="mobile-web-app-capable" content="yes">
-<meta name="theme-color" content="#F2F2F7">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
 <meta name="robots" content="noindex, nofollow">
-<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 <title>테이크원 · 관리자</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 <style>
-@import url('https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;600;700&display=swap');
-
-/* ── RESET & BASE ── */
-*,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
-html,body{height:100%;width:100%;}
-html{-webkit-text-size-adjust:100%;}
+:root{
+  --purple:#7C3AED;--blue:#2563EB;--bg:#F1F5F9;--line:#E2E8F0;
+  --ink:#0F172A;--muted:#64748B;--red:#EF4444;
+}
+*{box-sizing:border-box;}
+html,body{margin:0;padding:0;}
 body{
-  font-family:'Noto Sans KR',-apple-system,BlinkMacSystemFont,'SF Pro Text',sans-serif;
-  background:#F2F2F7;
-  color:#1C1C1E;
-  -webkit-font-smoothing:antialiased;
-  overflow:hidden; /* prevent outer scroll — each page scrolls internally */
+  font-family:-apple-system,BlinkMacSystemFont,'Segoe UI','Apple SD Gothic Neo','Malgun Gothic',sans-serif;
+  background:var(--bg);color:var(--ink);-webkit-font-smoothing:antialiased;
 }
+.page{display:none;}
+.page.active{display:block;}
 
-/* ── PAGE SYSTEM ── */
-.page{
-  display:none;
-  flex-direction:column;
-  height:100vh;
-  height:100dvh; /* dynamic viewport for mobile browsers */
-  width:100%;
-  overflow:hidden;
-}
-.page.active{display:flex;}
-
-/* ── STATUS BAR SPACER (iOS safe area) ── */
-.safe-top{height:env(safe-area-inset-top,0px);background:rgba(242,242,247,0.95);flex-shrink:0;}
-.safe-top-white{height:env(safe-area-inset-top,0px);background:rgba(255,255,255,0.95);flex-shrink:0;}
-.safe-bottom{height:env(safe-area-inset-bottom,16px);flex-shrink:0;}
-
-/* ── NAV BAR ── */
-.nav{
-  height:48px;
-  background:rgba(242,242,247,0.92);
-  -webkit-backdrop-filter:saturate(180%) blur(20px);
-  backdrop-filter:saturate(180%) blur(20px);
-  border-bottom:0.5px solid rgba(0,0,0,0.15);
-  display:flex;align-items:center;
-  padding:0 8px;
-  flex-shrink:0;
-  position:relative;
-}
-.nav-white{background:rgba(255,255,255,0.92);}
-.nav-purple{background:rgba(175,82,222,0.95);}
-.nav-center{
-  position:absolute;left:50%;transform:translateX(-50%);
-  font-size:17px;font-weight:600;color:#1C1C1E;
-  white-space:nowrap;max-width:55%;text-align:center;
-  overflow:hidden;text-overflow:ellipsis;
-}
-.nav-purple .nav-center{color:#fff;}
-.nav-side{
-  display:flex;align-items:center;gap:2px;
-  min-width:72px;
-  background:none;border:none;cursor:pointer;
-  font-family:inherit;font-size:17px;font-weight:400;
-  color:#007AFF;padding:12px 8px;
-  -webkit-tap-highlight-color:transparent;
-  line-height:1;
-}
-.nav-side.right{justify-content:flex-end;margin-left:auto;}
-.nav-side.green-txt{color:#34C759;}
-.nav-purple .nav-side{color:rgba(255,255,255,0.9);}
-.nav-chevron{width:10px;height:17px;flex-shrink:0;}
-
-/* ── SCROLL AREA ── */
-.scr{
-  flex:1;
-  overflow-y:auto;
-  overflow-x:hidden;
-  -webkit-overflow-scrolling:touch;
-  overscroll-behavior:contain;
-}
-
-/* ── CONTENT MAX WIDTH ── */
-.wrap{max-width:480px;margin:0 auto;padding:0 0 24px;}
-
-/* ── HERO (main page top) ── */
-.hero{
-  background:#fff;
-  padding:env(safe-area-inset-top,0px) 0 0;
-}
-.hero-inner{
-  padding:28px 20px 24px;
-  text-align:center;
-  border-bottom:0.5px solid rgba(0,0,0,0.1);
-}
-.hero-badge{
-  display:inline-flex;align-items:center;gap:5px;
-  background:#F2F2F7;border-radius:20px;
-  padding:4px 12px;font-size:12px;font-weight:500;color:#6E6E73;
-  margin-bottom:12px;
-}
-.hero-title{font-size:26px;font-weight:700;color:#1C1C1E;letter-spacing:-0.5px;line-height:1.2;margin-bottom:6px;}
-.hero-sub{font-size:14px;color:#6E6E73;line-height:1.5;}
-
-/* ── SEGMENTED CONTROL ── */
-.seg-bar{
-  background:#fff;
-  border-bottom:0.5px solid rgba(0,0,0,0.1);
-  padding:10px 16px;
-  flex-shrink:0;
-}
-.seg{
-  display:flex;
-  background:#E9E9EB;
-  border-radius:9px;
-  padding:2px;
-}
-.seg-btn{
-  flex:1;
-  padding:8px 6px;
-  border:none;background:none;
-  font-family:inherit;font-size:13px;font-weight:500;
-  color:#6E6E73;border-radius:7px;cursor:pointer;
-  transition:all 0.18s;
-  -webkit-tap-highlight-color:transparent;
-  white-space:nowrap;
-}
-.seg-btn.on{
-  background:#fff;color:#1C1C1E;font-weight:600;
-  box-shadow:0 1px 3px rgba(0,0,0,0.14),0 0.5px 1px rgba(0,0,0,0.1);
-}
-
-/* ── SECTION HEADER ── */
-.sh{
-  font-size:13px;font-weight:600;color:#6E6E73;
-  letter-spacing:0.2px;
-  margin:24px 0 6px 16px;
-  text-transform:uppercase;
-}
-.sh:first-child{margin-top:16px;}
-.sh-note{font-size:11px;font-weight:400;color:#AEAEB2;text-transform:none;letter-spacing:0;}
-
-/* ── iOS-STYLE GROUPED CARD ── */
-.gcard{
-  background:#fff;
-  border-radius:12px;
-  overflow:hidden;
-  margin:0 16px 8px;
-}
-
-/* ── UNIFIED INPUT ROW (name + pin + btn) ── */
-.np-wrap{display:flex;align-items:stretch;min-height:52px;}
-.np-name{
-  flex:1;min-width:0;
-  border:none;outline:none;
-  font-family:inherit;font-size:16px;color:#1C1C1E;
-  background:transparent;padding:14px 0 14px 16px;
-  -webkit-appearance:none;
-}
-.np-name::placeholder{color:#C7C7CC;}
-.np-div{width:0.5px;background:rgba(0,0,0,0.1);flex-shrink:0;margin:10px 0;}
-.np-pin-wrap{
-  position:relative;display:flex;align-items:center;
-  width:96px;flex-shrink:0;
-}
-.np-pin{
-  width:100%;border:none;outline:none;
-  font-family:inherit;font-size:16px;color:#1C1C1E;
-  background:transparent;
-  padding:14px 28px 14px 10px;
-  -webkit-appearance:none;
-  letter-spacing:4px;text-align:center;
-}
-.np-pin::placeholder{letter-spacing:0;font-size:13px;color:#C7C7CC;text-align:center;}
-.eye-btn{
-  position:absolute;right:6px;
-  background:none;border:none;cursor:pointer;
-  font-size:14px;color:#C7C7CC;padding:6px;
-  -webkit-tap-highlight-color:transparent;line-height:1;
-}
-.np-add{
-  background:#007AFF;color:#fff;
-  border:none;cursor:pointer;font-family:inherit;
-  font-size:15px;font-weight:600;
-  padding:0 18px;
-  -webkit-tap-highlight-color:transparent;
-  flex-shrink:0;
-}
-.np-add:active{background:#0063D1;}
-
-/* ── INFO STRIP ── */
-.info-strip{
-  background:#EAF4FF;
-  border-top:0.5px solid rgba(0,122,255,0.15);
-  padding:10px 14px;
-  font-size:13px;color:#0055B3;line-height:1.5;
-  display:flex;gap:8px;align-items:flex-start;
-}
-.info-strip .ii{flex-shrink:0;margin-top:1px;}
-
-/* ── CHIPS ── */
-.chips{
-  display:flex;flex-wrap:wrap;gap:7px;
-  padding:10px 14px 12px;
-}
-.chip{
-  display:inline-flex;align-items:center;gap:4px;
-  padding:6px 10px 6px 13px;
-  background:#F2F2F7;border-radius:999px;
-  font-size:13px;font-weight:500;color:#1C1C1E;
-  border:none;cursor:pointer;
-  -webkit-tap-highlight-color:transparent;
-  transition:all 0.15s;
-}
-.chip.on{background:#007AFF;color:#fff;}
-.chip-x{
-  width:16px;height:16px;
-  background:rgba(0,0,0,0.1);border-radius:50%;
-  display:flex;align-items:center;justify-content:center;
-  font-size:10px;font-weight:700;color:#6E6E73;flex-shrink:0;
-}
-.chip.on .chip-x{background:rgba(255,255,255,0.25);color:#fff;}
-
-/* ── ERR MSG ── */
-.emsg{font-size:13px;color:#FF3B30;padding:6px 16px 10px;display:none;}
+/* ── LOGIN ── */
+.login-page.active{display:flex;min-height:100vh;align-items:center;justify-content:center;padding:24px;}
+.login-card{background:#fff;width:100%;max-width:400px;border-radius:16px;box-shadow:0 10px 40px rgba(15,23,42,.12);padding:36px 32px;}
+.login-icon{font-size:44px;text-align:center;line-height:1;}
+.login-title{font-size:22px;font-weight:800;text-align:center;margin:12px 0 4px;}
+.login-sub{font-size:14px;color:var(--muted);text-align:center;margin-bottom:24px;}
+.field{margin-bottom:12px;}
+.field label{display:block;font-size:13px;font-weight:600;color:var(--muted);margin-bottom:6px;}
+.field .row{display:flex;gap:8px;}
+.input{width:100%;border:1.5px solid var(--line);border-radius:10px;padding:12px 14px;font-size:15px;font-family:inherit;outline:none;color:var(--ink);background:#fff;}
+.input:focus{border-color:var(--purple);}
+.emsg{color:var(--red);font-size:13px;display:none;margin:2px 0 12px;}
 .emsg.show{display:block;}
+.eye-btn{border:1.5px solid var(--line);border-radius:10px;background:#fff;padding:0 12px;cursor:pointer;font-size:16px;flex-shrink:0;}
 
-/* ── DAYS GRID ── */
-.days-grid{
-  display:grid;
-  grid-template-columns:repeat(5,1fr);
-  gap:7px;
-  padding:14px;
-}
-.dtile{
-  border:1.5px solid #E5E5EA;
-  border-radius:10px;
-  background:#fff;
-  text-align:center;
-  padding:11px 2px 9px;
-  cursor:pointer;
-  -webkit-tap-highlight-color:transparent;
-  user-select:none;
-  transition:all 0.15s;
-}
-.dtile.on{background:#007AFF;border-color:#007AFF;}
-.dname{font-size:13px;font-weight:600;color:#1C1C1E;}
-.dtile.on .dname{color:#fff;}
-.dtick{font-size:16px;margin-top:5px;color:#C7C7CC;}
-.dtile.on .dtick{color:rgba(255,255,255,0.85);}
+/* ── BUTTONS ── */
+.btn{border:none;border-radius:10px;font-family:inherit;font-weight:700;cursor:pointer;display:inline-flex;align-items:center;justify-content:center;gap:6px;padding:10px 15px;font-size:14px;transition:filter .15s;white-space:nowrap;}
+.btn:hover{filter:brightness(.96);}
+.btn:active{filter:brightness(.9);}
+.btn-full{width:100%;padding:13px;font-size:15px;}
+.btn-sm{padding:6px 12px;font-size:12.5px;border-radius:8px;}
+.btn-purple{background:var(--purple);color:#fff;}
+.btn-blue{background:var(--blue);color:#fff;}
+.btn-red{background:var(--red);color:#fff;}
+.btn-gray{background:#E2E8F0;color:#0F172A;}
+.btn-excel{background:#15803D;color:#fff;}
+.btn-ghost{background:#fff;color:#334155;border:1.5px solid var(--line);}
 
-/* ── DAY PANEL ── */
-.dpanel{background:#fff;border-radius:12px;overflow:hidden;margin:0 16px 8px;}
-.dpanel-head{
-  background:#007AFF;color:#fff;
-  padding:13px 16px;font-size:15px;font-weight:600;
-  display:flex;align-items:center;gap:8px;
-}
-.dpanel-dot{width:6px;height:6px;background:rgba(255,255,255,0.5);border-radius:50%;flex-shrink:0;}
+/* ── TOPBAR ── */
+.topbar{position:sticky;top:0;z-index:20;background:#fff;border-bottom:1px solid var(--line);}
+.topbar-in{max-width:1400px;margin:0 auto;padding:13px 24px;display:flex;align-items:center;gap:10px;flex-wrap:wrap;}
+.brand{font-size:17px;font-weight:800;display:flex;align-items:center;gap:10px;margin-right:6px;}
+.brand .pill{background:var(--purple);color:#fff;font-size:12px;font-weight:800;padding:4px 11px;border-radius:999px;}
+.spacer{flex:1;}
+.count-lbl{color:var(--muted);font-size:13px;margin-right:4px;}
 
-/* ── PFIELD (inside panel) ── */
-.pfield{padding:14px 16px;border-bottom:0.5px solid rgba(0,0,0,0.08);}
-.pfield:last-child{border-bottom:none;}
-.pfield-lbl{
-  font-size:12px;font-weight:600;color:#8E8E93;
-  text-transform:uppercase;letter-spacing:0.3px;
-  margin-bottom:9px;
-}
-.req{color:#FF3B30;margin-left:2px;}
-.opts{display:flex;flex-wrap:wrap;gap:8px;}
-.opt{
-  padding:9px 16px;
-  border:1.5px solid #E5E5EA;
-  border-radius:999px;
-  background:#fff;
-  font-family:inherit;font-size:14px;font-weight:500;
-  color:#1C1C1E;cursor:pointer;
-  -webkit-tap-highlight-color:transparent;
-  transition:all 0.15s;
-  min-height:44px;display:flex;align-items:center;
-}
-.opt.on{background:#007AFF;border-color:#007AFF;color:#fff;}
-.fi-err .opt:not(.on){border-color:#FF3B30;}
-.perr{font-size:12px;color:#FF3B30;margin-top:7px;display:none;}
-.fi-err .perr{display:block;}
-.pfield input[type=text]{
-  width:100%;border:none;outline:none;
-  font-family:inherit;font-size:15px;color:#1C1C1E;
-  background:transparent;padding:7px 0 0;
-  -webkit-appearance:none;min-height:36px;
-}
-.pfield input[type=text]::placeholder{color:#C7C7CC;}
+/* ── CONTAINER ── */
+.container{max-width:1400px;margin:0 auto;padding:20px 24px 60px;}
 
-/* ── SCHOOL TIME DROPDOWN ── */
-.time-drop-row{display:flex;gap:8px;margin-top:8px;}
-.time-drop-row select{
-  flex:1;border:1.5px solid #E5E5EA;border-radius:10px;
-  padding:10px 28px 10px 12px;
-  font-family:inherit;font-size:15px;color:#1C1C1E;
-  background:#F9F9F9 url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%23AEAEB2' stroke-width='1.8' fill='none' stroke-linecap='round'/%3E%3C/svg%3E") no-repeat right 10px center;
-  outline:none;-webkit-appearance:none;appearance:none;
-  cursor:pointer;min-height:44px;
-}
-.time-drop-row select:focus{border-color:#007AFF;}
-.time-drop-colon{display:flex;align-items:center;font-size:18px;font-weight:700;color:#8E8E93;flex-shrink:0;}
+/* ── SUMMARY ── */
+.summary{display:flex;gap:12px;flex-wrap:wrap;margin-bottom:18px;}
+.stat{background:#fff;border:1px solid var(--line);border-radius:12px;padding:12px 18px;min-width:92px;}
+.stat .k{font-size:12px;color:var(--muted);font-weight:700;}
+.stat .v{font-size:24px;font-weight:800;margin-top:2px;line-height:1.1;}
+.stat.accent{background:var(--purple);border-color:var(--purple);color:#fff;}
+.stat.accent .k{color:rgba(255,255,255,.85);}
+.stat.day .k{color:#4338CA;}
 
-/* ── BIG CTA BUTTON ── */
-.cta{
-  display:flex;align-items:center;justify-content:center;
-  width:calc(100% - 32px);margin:8px 16px 0;
-  padding:16px;border:none;border-radius:14px;
-  font-family:inherit;font-size:17px;font-weight:700;
-  cursor:pointer;-webkit-tap-highlight-color:transparent;
-  transition:all 0.15s;min-height:54px;
-}
-.cta-green{background:#34C759;color:#fff;}
-.cta-green:active{background:#2AAE4F;}
-.cta-blue{background:#007AFF;color:#fff;}
-.cta-blue:active{background:#0063D1;}
+/* ── TOOLBAR ── */
+.toolbar{display:flex;gap:10px;align-items:center;margin-bottom:14px;flex-wrap:wrap;}
+.search{flex:1;min-width:220px;max-width:360px;}
+.select{border:1.5px solid var(--line);border-radius:10px;padding:11px 12px;font-size:14px;font-family:inherit;background:#fff;outline:none;color:var(--ink);cursor:pointer;}
+.select:focus{border-color:var(--purple);}
+.shown{color:var(--muted);font-size:13px;}
 
-/* ── LOOKUP RESULT ── */
-.rcard{
-  background:#fff;border-radius:10px;
-  border:0.5px solid rgba(0,0,0,0.1);
-  padding:14px 15px;margin-bottom:8px;
-}
-.rcard-day{font-size:12px;font-weight:700;color:#8E8E93;text-transform:uppercase;letter-spacing:0.3px;margin-bottom:8px;}
-.rbadges{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:6px;}
-.rb{display:inline-block;padding:4px 10px;border-radius:999px;font-size:12px;font-weight:600;}
-.rb-b{background:#EBF5FF;color:#004EA2;}
-.rb-g{background:#E8FAF0;color:#1A6E35;}
-.rb-r{background:#FFF0EF;color:#C0392B;}
-.rloc{font-size:12px;color:#6E6E73;line-height:1.6;}
+/* ── TABLE ── */
+.tablewrap{background:#fff;border:1px solid var(--line);border-radius:14px;overflow:auto;max-height:calc(100vh - 268px);}
+table{width:100%;border-collapse:separate;border-spacing:0;min-width:1080px;font-size:13.5px;}
+thead th{position:sticky;top:0;background:#F8FAFC;z-index:5;text-align:left;font-size:12px;font-weight:800;color:var(--muted);padding:12px 14px;border-bottom:1px solid var(--line);white-space:nowrap;}
+tbody td{padding:11px 14px;border-bottom:1px solid #F1F5F9;vertical-align:top;color:var(--ink);}
+tbody tr:hover td{background:#FAFAFF;}
+tbody tr.grp td{border-top:2px solid #E2E8F0;}
+td.num{color:var(--muted);white-space:nowrap;}
+td.nm{font-weight:800;white-space:nowrap;}
+td.memo{max-width:280px;white-space:pre-wrap;color:#334155;}
+.badge{display:inline-block;padding:3px 10px;border-radius:999px;font-size:12px;font-weight:800;white-space:nowrap;}
+.badge-day{background:#EEF2FF;color:#4338CA;}
+.badge-time{background:#ECFEFF;color:#0E7490;}
+.badge-m{background:#F1F5F9;color:#334155;font-weight:700;}
+.empty{text-align:center;padding:64px 20px;color:var(--muted);}
+.empty-ico{font-size:44px;margin-bottom:10px;}
 
-/* ── IFIELD (styled input group) ── */
-.ifield{padding:0 16px;border-bottom:0.5px solid rgba(0,0,0,0.08);}
-.ifield:last-child{border-bottom:none;}
-.ifield label{display:block;font-size:12px;font-weight:500;color:#8E8E93;margin-top:13px;margin-bottom:4px;}
-.ifield .if-row{display:flex;align-items:center;padding-bottom:13px;}
-.ifield .if-row input{
-  flex:1;border:none;outline:none;
-  font-family:inherit;font-size:16px;color:#1C1C1E;
-  background:transparent;-webkit-appearance:none;
-  min-height:32px;
-}
-.ifield .if-row input::placeholder{color:#C7C7CC;}
-
-/* ── BUTTON VARIANTS ── */
-.btn{
-  display:inline-flex;align-items:center;justify-content:center;gap:6px;
-  border:none;border-radius:12px;
-  font-family:inherit;font-weight:600;cursor:pointer;
-  -webkit-tap-highlight-color:transparent;
-  white-space:nowrap;transition:all 0.15s;
-}
-.btn-full{width:100%;padding:15px;font-size:16px;border-radius:13px;}
-.btn-sm{padding:8px 16px;font-size:13px;border-radius:8px;}
-.btn-blue{background:#007AFF;color:#fff;}
-.btn-blue:active{background:#0063D1;}
-.btn-purple{background:#AF52DE;color:#fff;}
-.btn-purple:active{background:#9340C3;}
-.btn-red{background:#FF3B30;color:#fff;}
-.btn-red:active{background:#D32018;}
-.btn-gray{background:#E5E5EA;color:#1C1C1E;}
-.btn-gray:active{background:#D1D1D6;}
-.btn-excel{background:#1E7A45;color:#fff;}
-.btn-excel:active{background:#155A32;}
-.btn-green{background:#34C759;color:#fff;}
-.btn-green:active{background:#2AAE4F;}
-
-/* ── ADMIN LOGIN ── */
-.login-wrap{max-width:380px;margin:0 auto;padding:40px 16px 32px;}
-.login-icon{font-size:52px;text-align:center;margin-bottom:16px;line-height:1;}
-.login-title{font-size:22px;font-weight:700;text-align:center;color:#1C1C1E;margin-bottom:4px;}
-.login-sub{font-size:14px;color:#8E8E93;text-align:center;margin-bottom:28px;}
-
-/* ── ADMIN TABLE ── */
-.tscroll{overflow-x:auto;-webkit-overflow-scrolling:touch;border-radius:12px;border:0.5px solid rgba(0,0,0,0.12);}
-table{width:100%;border-collapse:collapse;min-width:680px;background:#fff;}
-th{background:#F2F2F7;padding:11px 12px;text-align:left;font-size:12px;font-weight:600;color:#8E8E93;white-space:nowrap;border-bottom:0.5px solid rgba(0,0,0,0.1);}
-td{padding:12px;font-size:13px;border-bottom:0.5px solid rgba(0,0,0,0.06);white-space:nowrap;color:#1C1C1E;}
-tr:last-child td{border-bottom:none;}
-tr:hover td{background:#FAFAFA;}
-
-/* ── ACT ROW ── */
-.act-row{display:flex;gap:8px;padding:0 16px;margin-bottom:10px;flex-wrap:wrap;}
-.act-row .btn{flex:1;min-width:0;padding:13px 10px;font-size:14px;}
-
-/* ── FILTER ROW ── */
-.filter-row{display:flex;gap:8px;padding:0 16px;margin-bottom:10px;}
-.filter-row input,.filter-row select{
-  flex:1;
-  border:1.5px solid #E5E5EA;border-radius:10px;
-  padding:11px 12px;font-family:inherit;font-size:14px;
-  background:#fff;color:#1C1C1E;outline:none;
-}
-.filter-row input:focus,.filter-row select:focus{border-color:#007AFF;}
-
-/* ── ADMIN STRIP ── */
-.admin-strip{
-  background:#AF52DE;color:#fff;
-  padding:12px 20px;
-  display:flex;align-items:center;justify-content:space-between;
-  flex-shrink:0;
-}
-.as-title{font-size:15px;font-weight:700;}
-.as-count{font-size:13px;opacity:0.8;}
-
-/* ── DISCLOSURE ── */
-details>summary{
-  cursor:pointer;font-size:14px;font-weight:600;color:#007AFF;
-  padding:12px 16px;list-style:none;display:flex;align-items:center;gap:6px;
-}
-details>summary::-webkit-details-marker{display:none;}
-details[open]>summary{color:#5856D6;}
-
-/* ── EMPTY ── */
-.empty{text-align:center;padding:60px 20px;color:#8E8E93;font-size:15px;}
-.empty-ico{font-size:44px;margin-bottom:12px;}
-
-/* ── MODAL (sheet from bottom) ── */
-.modal-bg{
-  display:none;position:fixed;inset:0;
-  background:rgba(0,0,0,0.45);z-index:300;
-  align-items:flex-end;justify-content:center;
-}
+/* ── MODAL ── */
+.modal-bg{display:none;position:fixed;inset:0;background:rgba(15,23,42,.5);z-index:100;align-items:center;justify-content:center;padding:20px;}
 .modal-bg.open{display:flex;}
-.modal{
-  background:#fff;border-radius:16px 16px 0 0;
-  padding:24px 20px;
-  padding-bottom:calc(20px + env(safe-area-inset-bottom,0px));
-  width:100%;max-width:480px;
-}
-.modal h3{font-size:18px;font-weight:700;text-align:center;margin-bottom:8px;}
-.modal p{font-size:15px;color:#6E6E73;text-align:center;line-height:1.6;margin-bottom:20px;}
+.modal{background:#fff;border-radius:16px;padding:26px 24px;width:100%;max-width:400px;box-shadow:0 20px 60px rgba(0,0,0,.25);}
+.modal h3{margin:0 0 8px;font-size:18px;text-align:center;font-weight:800;}
+.modal p{margin:0 0 20px;color:var(--muted);text-align:center;line-height:1.6;font-size:15px;}
 .modal-acts{display:grid;gap:8px;}
 
 /* ── TOAST ── */
-.toast{
-  position:fixed;
-  bottom:calc(28px + env(safe-area-inset-bottom,0px));
-  left:50%;
-  transform:translateX(-50%) translateY(100px);
-  background:rgba(28,28,30,0.9);color:#fff;
-  padding:12px 24px;border-radius:24px;
-  font-size:14px;font-weight:500;
-  transition:transform 0.28s cubic-bezier(.4,0,.2,1);
-  z-index:9999;white-space:nowrap;max-width:90vw;
-  -webkit-backdrop-filter:blur(10px);backdrop-filter:blur(10px);
-}
+.toast{position:fixed;bottom:30px;left:50%;transform:translateX(-50%) translateY(120px);background:rgba(15,23,42,.92);color:#fff;padding:12px 22px;border-radius:24px;font-size:14px;font-weight:600;transition:transform .28s cubic-bezier(.4,0,.2,1);z-index:200;white-space:nowrap;}
 .toast.show{transform:translateX(-50%) translateY(0);}
-.toast.ok{background:rgba(52,199,89,0.92);}
-.toast.warn{background:rgba(255,149,0,0.92);}
+.toast.ok{background:rgba(22,163,74,.95);}
+.toast.warn{background:rgba(234,88,12,.95);}
+
+@media(max-width:640px){
+  .topbar-in,.container{padding-left:14px;padding-right:14px;}
+  .brand{font-size:15px;}
+}
 </style>
 </head>
 <body>
 
-<!-- ════════════════════════════════════════
-     PAGE: ADMIN LOGIN
-════════════════════════════════════════ -->
-<div class="page active" id="page-admin-login">
-  <div class="safe-top"></div>
-  <div class="nav nav-white">
-    <button class="nav-side" onclick="location.href='/'">
-      <svg class="nav-chevron" viewBox="0 0 10 17" fill="none"><path d="M9 1L1 8.5L9 16" stroke="#007AFF" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
-      신청 페이지
-    </button>
-    <span class="nav-center">관리자</span>
-    <span class="nav-side right"></span>
-  </div>
-  <div class="scr">
-    <div class="login-wrap">
-      <div class="login-icon">🔐</div>
-      <div class="login-title">관리자 로그인</div>
-      <div class="login-sub">차량 신청 현황을 관리합니다</div>
-      <div class="gcard">
-        <div class="ifield">
-          <label>비밀번호</label>
-          <div class="if-row">
-            <input type="password" id="adminPw" placeholder="비밀번호 입력"
-              autocomplete="current-password"
-              onkeydown="if(event.key==='Enter')adminLogin()">
-            <button class="eye-btn" style="position:static;margin-left:4px;" onclick="toggleEye('adminPw')" type="button">👁</button>
-          </div>
-        </div>
-        <div class="emsg" id="err-admin-login"></div>
-        <div style="padding:12px 16px 14px;">
-          <button class="btn btn-purple btn-full" id="loginBtn" onclick="adminLogin()">로그인</button>
-        </div>
+<!-- ════════ LOGIN ════════ -->
+<div class="page login-page active" id="page-admin-login">
+  <div class="login-card">
+    <div class="login-icon">🔐</div>
+    <div class="login-title">관리자 로그인</div>
+    <div class="login-sub">차량 신청 현황 관리</div>
+    <div class="field">
+      <label>비밀번호</label>
+      <div class="row">
+        <input class="input" type="password" id="adminPw" placeholder="비밀번호 입력" autocomplete="current-password" onkeydown="if(event.key==='Enter')adminLogin()">
+        <button class="eye-btn" type="button" onclick="toggleEye('adminPw')">👁</button>
       </div>
     </div>
-    <div class="safe-bottom"></div>
+    <div class="emsg" id="err-admin-login"></div>
+    <button class="btn btn-purple btn-full" id="loginBtn" onclick="adminLogin()">로그인</button>
+    <div style="text-align:center;margin-top:14px;"><a href="/" style="color:var(--muted);font-size:13px;text-decoration:none;">← 신청 페이지로</a></div>
   </div>
 </div>
 
-<!-- ════════════════════════════════════════
-     PAGE: ADMIN DASHBOARD
-════════════════════════════════════════ -->
+<!-- ════════ DASHBOARD ════════ -->
 <div class="page" id="page-admin">
-  <div class="safe-top" style="background:#AF52DE;"></div>
-  <div class="nav nav-purple">
-    <button class="nav-side" onclick="adminLogout()">
-      <svg class="nav-chevron" viewBox="0 0 10 17" fill="none"><path d="M9 1L1 8.5L9 16" stroke="rgba(255,255,255,0.9)" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
-      로그아웃
-    </button>
-    <span class="nav-center">신청 관리</span>
-    <span class="nav-side right"></span>
-  </div>
-  <div class="admin-strip">
-    <span class="as-title">📋 신청 현황</span>
-    <span class="as-count" id="admin-count-lbl">—</span>
-  </div>
-  <div class="scr">
-    <div class="wrap">
-      <div style="height:14px;"></div>
-
-      <div class="act-row">
-        <button class="btn btn-blue" onclick="loadRecords()">🔄 새로고침</button>
-        <button class="btn btn-excel" onclick="exportExcel()">📊 엑셀</button>
-        <button class="btn btn-red" onclick="openDelModal()">🗑 전체삭제</button>
-      </div>
-
-      <div class="filter-row">
-        <input type="text" id="filterName" placeholder="이름 검색" oninput="renderAdminTable()">
-        <select id="filterDay" onchange="renderAdminTable()">
-          <option value="">전체 요일</option>
-          <option>월요일</option><option>화요일</option><option>수요일</option><option>목요일</option><option>금요일</option>
-        </select>
-      </div>
-
-      <div style="padding:0 16px;">
-        <div class="tscroll">
-          <table>
-            <thead><tr><th>#</th><th>이름</th><th>요일</th><th>수업</th><th>등원장소</th><th>하교시간</th><th>등원방법</th><th>하원장소</th><th>하원방법</th><th>메모</th><th></th></tr></thead>
-            <tbody id="adminTbody"></tbody>
-          </table>
-        </div>
-        <div class="empty" id="adminEmpty" style="display:none;"><div class="empty-ico">📋</div>신청 내역이 없습니다</div>
-      </div>
+  <div class="topbar">
+    <div class="topbar-in">
+      <div class="brand"><span class="pill">🚌 테이크원</span> 차량 신청 관리</div>
+      <span class="spacer"></span>
+      <span class="count-lbl" id="admin-count-lbl">—</span>
+      <button class="btn btn-ghost" onclick="loadRecords()">🔄 새로고침</button>
+      <button class="btn btn-excel" onclick="exportExcel()">📊 엑셀 다운로드</button>
+      <button class="btn btn-red" onclick="openDelModal()">🗑 전체삭제</button>
+      <button class="btn btn-ghost" onclick="adminLogout()">로그아웃</button>
     </div>
-    <div class="safe-bottom"></div>
+  </div>
+
+  <div class="container">
+    <div class="summary">
+      <div class="stat accent"><div class="k">전체 신청</div><div class="v" id="sum-total">0</div></div>
+      <div class="stat"><div class="k">학생 수</div><div class="v" id="sum-students">0</div></div>
+      <div class="stat day"><div class="k">월</div><div class="v" id="sum-0">0</div></div>
+      <div class="stat day"><div class="k">화</div><div class="v" id="sum-1">0</div></div>
+      <div class="stat day"><div class="k">수</div><div class="v" id="sum-2">0</div></div>
+      <div class="stat day"><div class="k">목</div><div class="v" id="sum-3">0</div></div>
+      <div class="stat day"><div class="k">금</div><div class="v" id="sum-4">0</div></div>
+    </div>
+
+    <div class="toolbar">
+      <input class="input search" type="text" id="filterName" placeholder="🔍 이름 검색" oninput="renderAdminTable()">
+      <select class="select" id="filterDay" onchange="renderAdminTable()">
+        <option value="">전체 요일</option>
+        <option>월요일</option><option>화요일</option><option>수요일</option><option>목요일</option><option>금요일</option>
+      </select>
+      <span class="shown">표시 <strong id="shown-count">0</strong>건</span>
+    </div>
+
+    <div class="tablewrap">
+      <table>
+        <thead>
+          <tr>
+            <th>#</th><th>이름</th><th>요일</th><th>수업</th><th>등원장소</th>
+            <th>하교시간</th><th>등원방법</th><th>하원장소</th><th>하원방법</th><th>메모</th><th></th>
+          </tr>
+        </thead>
+        <tbody id="adminTbody"></tbody>
+      </table>
+      <div class="empty" id="adminEmpty" style="display:none;"><div class="empty-ico">📋</div>신청 내역이 없습니다</div>
+    </div>
   </div>
 </div>
 
-<!-- MODAL: 전체 삭제 -->
+<!-- 전체 삭제 모달 -->
 <div class="modal-bg" id="modal-del">
   <div class="modal">
     <h3>⚠️ 전체 삭제</h3>
@@ -559,11 +194,11 @@ details[open]>summary{color:#5856D6;}
   </div>
 </div>
 
-<!-- MODAL: 확인 (범용) -->
+<!-- 범용 확인 모달 -->
 <div class="modal-bg" id="modal-confirm">
-  <div class="modal" style="text-align:center;">
-    <h3 id="confirm-title" style="margin-bottom:8px;">확인</h3>
-    <p id="confirm-msg" style="margin-bottom:20px;">진행할까요?</p>
+  <div class="modal">
+    <h3 id="confirm-title">확인</h3>
+    <p id="confirm-msg">진행할까요?</p>
     <div class="modal-acts">
       <button class="btn btn-red btn-full" id="confirm-ok">확인</button>
       <button class="btn btn-gray btn-full" id="confirm-cancel">취소</button>
@@ -572,6 +207,7 @@ details[open]>summary{color:#5856D6;}
 </div>
 
 <div class="toast" id="toast"></div>
+
 <script>
 const DAYS=['월요일','화요일','수요일','목요일','금요일'];
 let adminKey=sessionStorage.getItem('to_admin_key')||'';
@@ -589,7 +225,7 @@ async function api(path,{method='GET',body,auth=false}={}){
 }
 
 /* ── PAGE ── */
-function showPage(id){document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));document.getElementById('page-'+id).classList.add('active');try{document.querySelector('#page-'+id+' .scr').scrollTop=0;}catch{}}
+function showPage(id){document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));document.getElementById('page-'+id).classList.add('active');}
 function toggleEye(id){const el=document.getElementById(id);if(el)el.type=el.type==='password'?'text':'password';}
 
 /* ── LOGIN ── */
@@ -613,22 +249,46 @@ async function loadRecords(){
   try{
     const r=await api('/api/records',{auth:true});
     records=r.records||[];
-    updateLbl();renderAdminTable();
+    updateLbl();renderSummary();renderAdminTable();
   }catch(e){
     if(e.status===401){adminLogout();showE(document.getElementById('err-admin-login'),'다시 로그인해 주세요');}
     else toast('⚠️ '+e.message);
   }
 }
 function updateLbl(){document.getElementById('admin-count-lbl').textContent=`전체 ${records.length}건`;}
+function renderSummary(){
+  document.getElementById('sum-total').textContent=records.length;
+  document.getElementById('sum-students').textContent=new Set(records.map(r=>r.이름)).size;
+  DAYS.forEach((d,idx)=>{const el=document.getElementById('sum-'+idx);if(el)el.textContent=records.filter(r=>r.요일===d).length;});
+}
 function renderAdminTable(){
   const name=document.getElementById('filterName').value.trim().toLowerCase();
   const day=document.getElementById('filterDay').value;
   let list=records.filter(r=>(!name||r.이름.toLowerCase().includes(name))&&(!day||r.요일===day));
   list.sort((a,b)=>a.이름!==b.이름?a.이름.localeCompare(b.이름,'ko'):DAYS.indexOf(a.요일)-DAYS.indexOf(b.요일));
   const tb=document.getElementById('adminTbody'),em=document.getElementById('adminEmpty');
+  document.getElementById('shown-count').textContent=list.length;
   if(!list.length){tb.innerHTML='';em.style.display='';return;}
   em.style.display='none';
-  tb.innerHTML=list.map((r,i)=>`<tr><td>${i+1}</td><td><strong>${escapeHtml(r.이름)}</strong></td><td>${r.요일}</td><td>${r.희망수업시간}</td><td>${escapeHtml(r.등원장소)||'-'}</td><td>${r.학교하교시간||'-'}</td><td>${r.등원방법||'-'}</td><td>${escapeHtml(r.하원장소)||'-'}</td><td>${r.하원방법||'-'}</td><td style="white-space:pre-wrap;max-width:220px;">${escapeHtml(r.메모)||'-'}</td><td><button class="btn btn-red btn-sm" onclick="adminDel(${r.id},'${(r.이름||'').replace(/'/g,"\\'")}','${r.요일}')">삭제</button></td></tr>`).join('');
+  let prev=null,html='';
+  list.forEach((r,i)=>{
+    const grp=(i>0 && r.이름!==prev);prev=r.이름;
+    const school=r.학교하교시간?r.학교하교시간.replace(':','  '):'-';
+    html+=`<tr class="${grp?'grp':''}">`
+      +`<td class="num">${i+1}</td>`
+      +`<td class="nm">${escapeHtml(r.이름)}</td>`
+      +`<td><span class="badge badge-day">${(r.요일||'').replace('요일','')}</span></td>`
+      +`<td><span class="badge badge-time">${escapeHtml(r.희망수업시간)||'-'}</span></td>`
+      +`<td>${escapeHtml(r.등원장소)||'-'}</td>`
+      +`<td>${school}</td>`
+      +`<td>${r.등원방법?`<span class="badge badge-m">${escapeHtml(r.등원방법)}</span>`:'-'}</td>`
+      +`<td>${escapeHtml(r.하원장소)||'-'}</td>`
+      +`<td>${r.하원방법?`<span class="badge badge-m">${escapeHtml(r.하원방법)}</span>`:'-'}</td>`
+      +`<td class="memo">${escapeHtml(r.메모)||'-'}</td>`
+      +`<td><button class="btn btn-red btn-sm" onclick="adminDel(${r.id},'${(r.이름||'').replace(/'/g,"\\'")}','${r.요일}')">삭제</button></td>`
+      +`</tr>`;
+  });
+  tb.innerHTML=html;
 }
 
 /* ── DELETE (개별/전체) ── */
