@@ -4,6 +4,10 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <meta name="robots" content="noindex, nofollow">
+<link rel="icon" href="/favicon.svg" type="image/svg+xml">
+<link rel="apple-touch-icon" href="/apple-touch-icon.png">
+<link rel="manifest" href="/manifest.json">
+<meta name="theme-color" content="#7C3AED">
 <title>테이크원 · 관리자</title>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 <style>
@@ -113,6 +117,41 @@ td.nm{background:#FCFCFF;}
 .toast.ok{background:rgba(22,163,74,.95);}
 .toast.warn{background:rgba(234,88,12,.95);}
 
+/* view switch */
+.viewbar{display:flex;align-items:center;gap:10px;margin-bottom:16px;}
+.viewseg{display:inline-flex;background:#EEF2F7;border-radius:10px;padding:3px;}
+.vbtn{border:none;background:transparent;padding:8px 16px;border-radius:8px;font-weight:700;font-size:14px;cursor:pointer;color:#475569;font-family:inherit;}
+.vbtn.on{background:#fff;color:#7C3AED;box-shadow:0 1px 3px rgba(0,0,0,.1);}
+
+/* route view */
+.routeday{background:#fff;border:1px solid var(--line);border-radius:14px;padding:16px 18px;margin-bottom:14px;}
+.routeday-h{font-size:16px;font-weight:800;margin-bottom:12px;display:flex;align-items:center;gap:10px;}
+.routeday-h .rcount{font-size:12px;font-weight:700;color:var(--muted);background:#F1F5F9;padding:3px 10px;border-radius:999px;}
+.routecols{display:grid;grid-template-columns:1fr 1fr;gap:16px;}
+.routecol-h{font-size:13px;font-weight:800;color:#4338CA;margin-bottom:8px;padding-bottom:6px;border-bottom:2px solid #EEF2FF;}
+.rgroup{margin-bottom:10px;}
+.rgroup-h{font-size:13.5px;font-weight:800;color:#0F172A;margin-bottom:4px;}
+.rgroup-h .rgn{font-size:11.5px;font-weight:700;color:var(--muted);margin-left:4px;}
+.ritem{display:flex;justify-content:space-between;align-items:center;padding:5px 10px;border-radius:7px;background:#F8FAFC;margin-bottom:3px;font-size:13.5px;}
+.ritem .rname{font-weight:700;}
+.ritem .rtime{color:#0E7490;font-weight:700;font-size:12.5px;}
+.rnone{color:var(--muted);font-size:13px;padding:6px 0;}
+@media(max-width:640px){.routecols{grid-template-columns:1fr;}}
+
+/* print */
+.print-title{display:none;}
+@media print{
+  body{background:#fff;}
+  .topbar,.viewbar,.toolbar,.summary,.count-lbl,.btn,.modal-bg,.toast{display:none !important;}
+  .container{max-width:none;padding:0;}
+  .print-title{display:block;font-size:20px;font-weight:800;margin:0 0 12px;}
+  .tablewrap{max-height:none;border:none;border-radius:0;overflow:visible;}
+  thead th{background:#eee !important;-webkit-print-color-adjust:exact;print-color-adjust:exact;}
+  .routeday{break-inside:avoid;border:1px solid #ccc;}
+  #view-list td.memo{max-width:none;}
+  a[href]:after{content:"";}
+}
+
 @media(max-width:640px){
   .topbar-in,.container{padding-left:14px;padding-right:14px;}
   .brand{font-size:15px;}
@@ -165,27 +204,42 @@ td.nm{background:#FCFCFF;}
       <div class="stat day"><div class="k">금</div><div class="v" id="sum-4">0</div></div>
     </div>
 
-    <div class="toolbar">
-      <input class="input search" type="text" id="filterName" placeholder="🔍 이름 검색" oninput="renderAdminTable()">
-      <select class="select" id="filterDay" onchange="renderAdminTable()">
-        <option value="">전체 요일</option>
-        <option>월요일</option><option>화요일</option><option>수요일</option><option>목요일</option><option>금요일</option>
-      </select>
-      <span class="shown">표시 <strong id="shown-count">0</strong>명</span>
+    <div class="viewbar">
+      <div class="viewseg">
+        <button class="vbtn on" id="vb-list" onclick="switchView('list')">📋 명단</button>
+        <button class="vbtn" id="vb-route" onclick="switchView('route')">🚌 차량 노선</button>
+      </div>
+      <span class="spacer"></span>
+      <button class="btn btn-ghost" onclick="printView()">🖨 인쇄</button>
     </div>
 
-    <div class="tablewrap">
-      <table>
-        <thead>
-          <tr>
-            <th>#</th><th>이름</th><th>요일</th><th>수업</th><th>등원장소</th>
-            <th>하교시간</th><th>등원방법</th><th>하원장소</th><th>하원방법</th><th>메모</th><th></th>
-          </tr>
-        </thead>
-        <tbody id="adminTbody"></tbody>
-      </table>
-      <div class="empty" id="adminEmpty" style="display:none;"><div class="empty-ico">📋</div>신청 내역이 없습니다</div>
+    <div class="print-title" id="print-title">차량 신청 명단</div>
+
+    <div id="view-list">
+      <div class="toolbar">
+        <input class="input search" type="text" id="filterName" placeholder="🔍 이름 검색" oninput="renderAdminTable()">
+        <select class="select" id="filterDay" onchange="renderAdminTable()">
+          <option value="">전체 요일</option>
+          <option>월요일</option><option>화요일</option><option>수요일</option><option>목요일</option><option>금요일</option>
+        </select>
+        <span class="shown">표시 <strong id="shown-count">0</strong>명</span>
+      </div>
+
+      <div class="tablewrap">
+        <table>
+          <thead>
+            <tr>
+              <th>#</th><th>이름</th><th>요일</th><th>수업</th><th>등원장소</th>
+              <th>하교시간</th><th>등원방법</th><th>하원장소</th><th>하원방법</th><th>메모</th><th></th>
+            </tr>
+          </thead>
+          <tbody id="adminTbody"></tbody>
+        </table>
+        <div class="empty" id="adminEmpty" style="display:none;"><div class="empty-ico">📋</div>신청 내역이 없습니다</div>
+      </div>
     </div>
+
+    <div id="view-route" style="display:none;"></div>
   </div>
 </div>
 
@@ -257,6 +311,7 @@ async function loadRecords(){
     const r=await api('/api/records',{auth:true});
     records=r.records||[];
     updateLbl();renderSummary();renderAdminTable();
+    if(currentView==='route')renderRouteView();
   }catch(e){
     if(e.status===401){adminLogout();showE(document.getElementById('err-admin-login'),'다시 로그인해 주세요');}
     else toast('⚠️ '+e.message);
@@ -268,6 +323,49 @@ function renderSummary(){
   document.getElementById('sum-students').textContent=new Set(records.map(r=>r.이름)).size;
   DAYS.forEach((d,idx)=>{const el=document.getElementById('sum-'+idx);if(el)el.textContent=records.filter(r=>r.요일===d).length;});
 }
+
+/* ── 뷰 전환 (명단 / 차량 노선) ── */
+let currentView='list';
+function switchView(v){
+  currentView=v;
+  document.getElementById('view-list').style.display=(v==='list')?'':'none';
+  document.getElementById('view-route').style.display=(v==='route')?'':'none';
+  document.getElementById('vb-list').classList.toggle('on',v==='list');
+  document.getElementById('vb-route').classList.toggle('on',v==='route');
+  document.getElementById('print-title').textContent=(v==='route')?'차량 노선표':'차량 신청 명단';
+  if(v==='route')renderRouteView();
+}
+function placeGroups(recs,placeField,timeField){
+  if(!recs.length)return '<div class="rnone">해당 없음</div>';
+  const map=new Map();
+  recs.forEach(r=>{const p=((r[placeField]||'').trim())||'(장소 미기재)';if(!map.has(p))map.set(p,[]);map.get(p).push(r);});
+  const places=[...map.keys()].sort((a,b)=>a.localeCompare(b,'ko'));
+  return places.map(p=>{
+    const items=map.get(p).sort((a,b)=>(a.희망수업시간||'').localeCompare(b.희망수업시간||'')||a.이름.localeCompare(b.이름,'ko'));
+    return `<div class="rgroup"><div class="rgroup-h">${escapeHtml(p)}<span class="rgn">${items.length}명</span></div>`
+      +items.map(r=>{const t=((r[timeField]||'').replace(':','  ')).trim();return `<div class="ritem"><span class="rname">${escapeHtml(r.이름)}</span>${t?`<span class="rtime">${escapeHtml(t)}</span>`:''}</div>`;}).join('')
+      +`</div>`;
+  }).join('');
+}
+function renderRouteView(){
+  const box=document.getElementById('view-route');
+  let html='';
+  DAYS.forEach(day=>{
+    const dr=records.filter(r=>r.요일===day);
+    const goCar=dr.filter(r=>r.등원방법==='차량');
+    const backCar=dr.filter(r=>r.하원방법==='차량');
+    if(!goCar.length && !backCar.length)return;
+    html+=`<div class="routeday">
+      <div class="routeday-h">${day} <span class="rcount">등원 ${goCar.length} · 하원 ${backCar.length}</span></div>
+      <div class="routecols">
+        <div class="routecol"><div class="routecol-h">🚌 등원 차량 (${goCar.length})</div>${placeGroups(goCar,'등원장소','희망수업시간')}</div>
+        <div class="routecol"><div class="routecol-h">🏠 하원 차량 (${backCar.length})</div>${placeGroups(backCar,'하원장소','학교하교시간')}</div>
+      </div>
+    </div>`;
+  });
+  box.innerHTML=html||'<div class="empty"><div class="empty-ico">🚌</div>차량 이용 신청이 없습니다</div>';
+}
+function printView(){window.print();}
 function renderAdminTable(){
   const name=document.getElementById('filterName').value.trim().toLowerCase();
   const day=document.getElementById('filterDay').value;
@@ -363,6 +461,8 @@ function toast(msg,type=''){const el=document.getElementById('toast');el.textCon
     catch{adminLogout();}
   }
 })();
+
+if('serviceWorker' in navigator){window.addEventListener('load',()=>navigator.serviceWorker.register('/sw.js').catch(()=>{}));}
 </script>
 </body>
 </html>

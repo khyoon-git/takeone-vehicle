@@ -1,6 +1,6 @@
 // GET  /api/records  -> 전체 신청 목록 (관리자 전용)
 // POST /api/records  -> 신청 등록 (공개). 같은 이름+요일은 새 내용으로 덮어씀.
-import { db, isAdmin, readBody, toRecord } from './_db.js';
+import { db, isAdmin, readBody, toRecord, clip } from './_db.js';
 
 export default async function handler(req, res) {
   const sql = db();
@@ -33,7 +33,7 @@ export default async function handler(req, res) {
           INSERT INTO records
             (name, pin, day, class_time, arrive_place, school_time, arrive_method, depart_place, depart_method, memo)
           VALUES
-            (${name}, ${pin}, ${day}, ${d.time || ''}, ${d.arrLoc || ''}, ${d.schoolTime || ''}, ${d.arrMethod || ''}, ${d.depLoc || ''}, ${d.depMethod || ''}, ${memo})
+            (${name}, ${pin}, ${day}, ${clip(d.time,10)}, ${clip(d.arrLoc,40)}, ${clip(d.schoolTime,20)}, ${clip(d.arrMethod,10)}, ${clip(d.depLoc,40)}, ${clip(d.depMethod,10)}, ${clip(memo,200)})
         `;
       }
       return res.status(200).json({ ok: true, overwritten });

@@ -1,6 +1,6 @@
 // POST /api/edit  { name, pin, days:[...] }
 // 해당 이름+PIN의 기존 신청을 모두 지우고 새 내용으로 교체 (공개, 본인 PIN 확인)
-import { db, readBody } from './_db.js';
+import { db, readBody, clip } from './_db.js';
 
 export default async function handler(req, res) {
   if (req.method !== 'POST') {
@@ -30,7 +30,7 @@ export default async function handler(req, res) {
         INSERT INTO records
           (name, pin, day, class_time, arrive_place, school_time, arrive_method, depart_place, depart_method, memo)
         VALUES
-          (${name}, ${pin}, ${day}, ${d.time || ''}, ${d.arrLoc || ''}, ${d.schoolTime || ''}, ${d.arrMethod || ''}, ${d.depLoc || ''}, ${d.depMethod || ''}, ${memo})
+          (${name}, ${pin}, ${day}, ${clip(d.time,10)}, ${clip(d.arrLoc,40)}, ${clip(d.schoolTime,20)}, ${clip(d.arrMethod,10)}, ${clip(d.depLoc,40)}, ${clip(d.depMethod,10)}, ${clip(memo,200)})
       `;
     }
     return res.status(200).json({ ok: true });

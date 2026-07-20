@@ -29,6 +29,9 @@ export async function readBody(req) {
   });
 }
 
+// 입력 길이 제한 헬퍼
+export const clip = (v, n) => String(v == null ? '' : v).slice(0, n);
+
 // DB row -> 프론트엔드가 쓰는 한글 키 객체로 변환
 export function toRecord(r) {
   return {
