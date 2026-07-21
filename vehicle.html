@@ -1,0 +1,1072 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="theme-color" content="#F2F2F7">
+<link rel="icon" href="/favicon.svg" type="image/svg+xml">
+<link rel="apple-touch-icon" href="/apple-touch-icon.png">
+<link rel="manifest" href="/manifest.json">
+<meta name="apple-mobile-web-app-title" content="차량신청">
+<title>테이크원 · 차량 신청</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;600;700&display=swap');
+
+/* ── RESET & BASE ── */
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
+html,body{height:100%;width:100%;}
+html{-webkit-text-size-adjust:100%;}
+body{
+  font-family:'Noto Sans KR',-apple-system,BlinkMacSystemFont,'SF Pro Text',sans-serif;
+  background:#F2F2F7;
+  color:#1C1C1E;
+  -webkit-font-smoothing:antialiased;
+  overflow:hidden; /* prevent outer scroll — each page scrolls internally */
+}
+
+/* ── PAGE SYSTEM ── */
+.page{
+  display:none;
+  flex-direction:column;
+  height:100vh;
+  height:100dvh; /* dynamic viewport for mobile browsers */
+  width:100%;
+  overflow:hidden;
+}
+.page.active{display:flex;}
+
+/* ── STATUS BAR SPACER (iOS safe area) ── */
+.safe-top{height:env(safe-area-inset-top,0px);background:rgba(242,242,247,0.95);flex-shrink:0;}
+.safe-top-white{height:env(safe-area-inset-top,0px);background:rgba(255,255,255,0.95);flex-shrink:0;}
+.safe-bottom{height:env(safe-area-inset-bottom,16px);flex-shrink:0;}
+
+/* ── NAV BAR ── */
+.nav{
+  height:48px;
+  background:rgba(242,242,247,0.92);
+  -webkit-backdrop-filter:saturate(180%) blur(20px);
+  backdrop-filter:saturate(180%) blur(20px);
+  border-bottom:0.5px solid rgba(0,0,0,0.15);
+  display:flex;align-items:center;
+  padding:0 8px;
+  flex-shrink:0;
+  position:relative;
+}
+.nav-white{background:rgba(255,255,255,0.92);}
+.nav-purple{background:rgba(175,82,222,0.95);}
+.nav-center{
+  position:absolute;left:50%;transform:translateX(-50%);
+  font-size:17px;font-weight:600;color:#1C1C1E;
+  white-space:nowrap;max-width:55%;text-align:center;
+  overflow:hidden;text-overflow:ellipsis;
+}
+.nav-purple .nav-center{color:#fff;}
+.nav-side{
+  display:flex;align-items:center;gap:2px;
+  min-width:72px;
+  background:none;border:none;cursor:pointer;
+  font-family:inherit;font-size:17px;font-weight:400;
+  color:#007AFF;padding:12px 8px;
+  -webkit-tap-highlight-color:transparent;
+  line-height:1;
+}
+.nav-side.right{justify-content:flex-end;margin-left:auto;}
+.nav-side.green-txt{color:#34C759;}
+.nav-purple .nav-side{color:rgba(255,255,255,0.9);}
+.nav-chevron{width:10px;height:17px;flex-shrink:0;}
+
+/* ── SCROLL AREA ── */
+.scr{
+  flex:1;
+  overflow-y:auto;
+  overflow-x:hidden;
+  -webkit-overflow-scrolling:touch;
+  overscroll-behavior:contain;
+}
+
+/* ── CONTENT MAX WIDTH ── */
+.wrap{max-width:480px;margin:0 auto;padding:0 0 24px;}
+
+/* ── HERO (main page top) ── */
+.hero{
+  background:#fff;
+  padding:env(safe-area-inset-top,0px) 0 0;
+}
+.hero-inner{
+  padding:28px 20px 24px;
+  text-align:center;
+  border-bottom:0.5px solid rgba(0,0,0,0.1);
+}
+.hero-badge{
+  display:inline-flex;align-items:center;gap:5px;
+  background:#F2F2F7;border-radius:20px;
+  padding:4px 12px;font-size:12px;font-weight:500;color:#6E6E73;
+  margin-bottom:12px;
+}
+.hero-title{font-size:26px;font-weight:700;color:#1C1C1E;letter-spacing:-0.5px;line-height:1.2;margin-bottom:6px;}
+.hero-sub{font-size:14px;color:#6E6E73;line-height:1.5;}
+
+/* ── SEGMENTED CONTROL ── */
+.seg-bar{
+  background:#fff;
+  border-bottom:0.5px solid rgba(0,0,0,0.1);
+  padding:10px 16px;
+  flex-shrink:0;
+}
+.seg{
+  display:flex;
+  background:#E9E9EB;
+  border-radius:9px;
+  padding:2px;
+}
+.seg-btn{
+  flex:1;
+  padding:8px 6px;
+  border:none;background:none;
+  font-family:inherit;font-size:13px;font-weight:500;
+  color:#6E6E73;border-radius:7px;cursor:pointer;
+  transition:all 0.18s;
+  -webkit-tap-highlight-color:transparent;
+  white-space:nowrap;
+}
+.seg-btn.on{
+  background:#fff;color:#1C1C1E;font-weight:600;
+  box-shadow:0 1px 3px rgba(0,0,0,0.14),0 0.5px 1px rgba(0,0,0,0.1);
+}
+
+/* ── SECTION HEADER ── */
+.sh{
+  font-size:13px;font-weight:600;color:#6E6E73;
+  letter-spacing:0.2px;
+  margin:24px 0 6px 16px;
+  text-transform:uppercase;
+}
+.sh:first-child{margin-top:16px;}
+.sh-note{font-size:11px;font-weight:400;color:#AEAEB2;text-transform:none;letter-spacing:0;}
+
+/* ── iOS-STYLE GROUPED CARD ── */
+.gcard{
+  background:#fff;
+  border-radius:12px;
+  overflow:hidden;
+  margin:0 16px 8px;
+}
+
+/* ── UNIFIED INPUT ROW (name + pin + btn) ── */
+.np-wrap{display:flex;align-items:stretch;min-height:52px;}
+.np-name{
+  flex:1;min-width:0;
+  border:none;outline:none;
+  font-family:inherit;font-size:16px;color:#1C1C1E;
+  background:transparent;padding:14px 0 14px 16px;
+  -webkit-appearance:none;
+}
+.np-name::placeholder{color:#C7C7CC;}
+.np-div{width:0.5px;background:rgba(0,0,0,0.1);flex-shrink:0;margin:10px 0;}
+.np-pin-wrap{
+  position:relative;display:flex;align-items:center;
+  width:96px;flex-shrink:0;
+}
+.np-pin{
+  width:100%;border:none;outline:none;
+  font-family:inherit;font-size:16px;color:#1C1C1E;
+  background:transparent;
+  padding:14px 28px 14px 10px;
+  -webkit-appearance:none;
+  letter-spacing:4px;text-align:center;
+}
+.np-pin::placeholder{letter-spacing:0;font-size:13px;color:#C7C7CC;text-align:center;}
+.eye-btn{
+  position:absolute;right:6px;
+  background:none;border:none;cursor:pointer;
+  font-size:14px;color:#C7C7CC;padding:6px;
+  -webkit-tap-highlight-color:transparent;line-height:1;
+}
+.np-add{
+  background:#007AFF;color:#fff;
+  border:none;cursor:pointer;font-family:inherit;
+  font-size:15px;font-weight:600;
+  padding:0 18px;
+  -webkit-tap-highlight-color:transparent;
+  flex-shrink:0;
+}
+.np-add:active{background:#0063D1;}
+
+/* ── INFO STRIP ── */
+.info-strip{
+  background:#EAF4FF;
+  border-top:0.5px solid rgba(0,122,255,0.15);
+  padding:10px 14px;
+  font-size:13px;color:#0055B3;line-height:1.5;
+  display:flex;gap:8px;align-items:flex-start;
+}
+.info-strip .ii{flex-shrink:0;margin-top:1px;}
+
+/* ── CHIPS ── */
+.chips{
+  display:flex;flex-wrap:wrap;gap:7px;
+  padding:10px 14px 12px;
+}
+.chip{
+  display:inline-flex;align-items:center;gap:4px;
+  padding:6px 10px 6px 13px;
+  background:#F2F2F7;border-radius:999px;
+  font-size:13px;font-weight:500;color:#1C1C1E;
+  border:none;cursor:pointer;
+  -webkit-tap-highlight-color:transparent;
+  transition:all 0.15s;
+}
+.chip.on{background:#007AFF;color:#fff;}
+.chip-x{
+  width:16px;height:16px;
+  background:rgba(0,0,0,0.1);border-radius:50%;
+  display:flex;align-items:center;justify-content:center;
+  font-size:10px;font-weight:700;color:#6E6E73;flex-shrink:0;
+}
+.chip.on .chip-x{background:rgba(255,255,255,0.25);color:#fff;}
+
+/* ── ERR MSG ── */
+.emsg{font-size:13px;color:#FF3B30;padding:6px 16px 10px;display:none;}
+.emsg.show{display:block;}
+
+/* ── DAYS GRID ── */
+.days-grid{
+  display:grid;
+  grid-template-columns:repeat(5,1fr);
+  gap:7px;
+  padding:14px;
+}
+.dtile{
+  border:1.5px solid #E5E5EA;
+  border-radius:10px;
+  background:#fff;
+  text-align:center;
+  padding:11px 2px 9px;
+  cursor:pointer;
+  -webkit-tap-highlight-color:transparent;
+  user-select:none;
+  transition:all 0.15s;
+}
+.dtile.on{background:#007AFF;border-color:#007AFF;}
+.dname{font-size:13px;font-weight:600;color:#1C1C1E;}
+.dtile.on .dname{color:#fff;}
+.dtick{font-size:16px;margin-top:5px;color:#C7C7CC;}
+.dtile.on .dtick{color:rgba(255,255,255,0.85);}
+
+/* ── DAY PANEL ── */
+.dpanel{background:#fff;border-radius:12px;overflow:visible;margin:0 16px 8px;}
+.dpanel-head{
+  background:#007AFF;color:#fff;
+  padding:13px 16px;font-size:15px;font-weight:600;
+  display:flex;align-items:center;gap:8px;
+  border-radius:12px 12px 0 0;
+}
+.dpanel-dot{width:6px;height:6px;background:rgba(255,255,255,0.5);border-radius:50%;flex-shrink:0;}
+
+/* ── PFIELD (inside panel) ── */
+.pfield{padding:14px 16px;border-bottom:0.5px solid rgba(0,0,0,0.08);}
+.pfield:last-child{border-bottom:none;}
+.pfield-lbl{
+  font-size:12px;font-weight:600;color:#8E8E93;
+  text-transform:uppercase;letter-spacing:0.3px;
+  margin-bottom:9px;
+}
+.req{color:#FF3B30;margin-left:2px;}
+.opts{display:flex;flex-wrap:wrap;gap:8px;}
+.opt{
+  padding:9px 16px;
+  border:1.5px solid #E5E5EA;
+  border-radius:999px;
+  background:#fff;
+  font-family:inherit;font-size:14px;font-weight:500;
+  color:#1C1C1E;cursor:pointer;
+  -webkit-tap-highlight-color:transparent;
+  transition:all 0.15s;
+  min-height:44px;display:flex;align-items:center;
+}
+.opt.on{background:#007AFF;border-color:#007AFF;color:#fff;}
+.fi-err .opt:not(.on){border-color:#FF3B30;}
+.perr{font-size:12px;color:#FF3B30;margin-top:7px;display:none;}
+.fi-err .perr{display:block;}
+.pfield input[type=text]{
+  width:100%;border:none;outline:none;
+  font-family:inherit;font-size:15px;color:#1C1C1E;
+  background:transparent;padding:7px 0 0;
+  -webkit-appearance:none;min-height:36px;
+}
+.pfield input[type=text]::placeholder{color:#C7C7CC;}
+
+/* ── SCHOOL TIME DROPDOWN ── */
+.time-drop-row{display:flex;gap:8px;margin-top:8px;}
+.time-drop-row select{
+  flex:1;border:1.5px solid #E5E5EA;border-radius:10px;
+  padding:10px 28px 10px 12px;
+  font-family:inherit;font-size:15px;color:#1C1C1E;
+  background:#F9F9F9 url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%23AEAEB2' stroke-width='1.8' fill='none' stroke-linecap='round'/%3E%3C/svg%3E") no-repeat right 10px center;
+  outline:none;-webkit-appearance:none;appearance:none;
+  cursor:pointer;min-height:44px;
+}
+.time-drop-row select:focus{border-color:#007AFF;}
+
+/* ── CUSTOM DROPDOWN (아래로 열림) ── */
+.seldrop{position:relative;flex:1;}
+.seldrop-btn{
+  width:100%;display:flex;align-items:center;justify-content:space-between;gap:6px;
+  border:1.5px solid #E5E5EA;border-radius:10px;padding:10px 12px;
+  background:#F9F9F9;font-family:inherit;font-size:15px;color:#1C1C1E;
+  cursor:pointer;min-height:44px;-webkit-tap-highlight-color:transparent;
+}
+.seldrop.open .seldrop-btn{border-color:#007AFF;}
+.seldrop.ph .seldrop-val{color:#C7C7CC;}
+.seldrop-chev{width:12px;height:8px;color:#AEAEB2;flex-shrink:0;transition:transform 0.18s;}
+.seldrop.open .seldrop-chev{transform:rotate(180deg);}
+.seldrop-list{
+  position:absolute;top:calc(100% + 4px);left:0;right:0;
+  background:#fff;border:1px solid #E5E5EA;border-radius:10px;
+  box-shadow:0 8px 24px rgba(0,0,0,0.14);
+  max-height:220px;overflow-y:auto;-webkit-overflow-scrolling:touch;
+  z-index:100;display:none;padding:4px;
+}
+.seldrop.open .seldrop-list{display:block;}
+.seldrop-item{
+  display:block;width:100%;text-align:left;border:none;background:transparent;
+  font-family:inherit;font-size:15px;color:#1C1C1E;padding:11px 10px;
+  border-radius:7px;cursor:pointer;-webkit-tap-highlight-color:transparent;
+}
+.seldrop-item:active,.seldrop-item:hover{background:#F2F2F7;}
+
+/* ── MEMO ── */
+.memo-area{
+  width:100%;box-sizing:border-box;border:none;outline:none;resize:vertical;
+  font-family:inherit;font-size:15px;color:#1C1C1E;line-height:1.6;
+  background:transparent;padding:14px 16px;min-height:88px;
+  -webkit-appearance:none;
+}
+.memo-area::placeholder{color:#C7C7CC;}
+
+/* 제출 전 검토 */
+.rv-body{max-height:52vh;overflow-y:auto;-webkit-overflow-scrolling:touch;}
+.rv-name{font-size:15px;font-weight:700;color:#007AFF;margin-bottom:10px;text-align:center;}
+.rv-day{background:#F7F7FA;border-radius:10px;padding:10px 12px;margin-bottom:8px;}
+.rv-dh{font-size:13.5px;font-weight:700;margin-bottom:6px;}
+.rv-line{display:flex;justify-content:space-between;gap:12px;font-size:13.5px;padding:2px 0;}
+.rv-line span{color:#8E8E93;flex-shrink:0;}
+.rv-line b{font-weight:600;text-align:right;}
+.rv-memo{background:#FFFDF3;border:1px solid rgba(180,140,0,.18);border-radius:10px;padding:10px 12px;font-size:13.5px;color:#5A4A00;white-space:pre-wrap;}
+
+/* 로딩 오버레이 */
+.loading-ov{display:none;position:fixed;inset:0;background:rgba(255,255,255,0.55);z-index:300;align-items:center;justify-content:center;}
+.loading-ov.show{display:flex;}
+.spinner{width:40px;height:40px;border:3px solid rgba(0,122,255,0.2);border-top-color:#007AFF;border-radius:50%;animation:spin 0.7s linear infinite;}
+@keyframes spin{to{transform:rotate(360deg);}}
+.time-drop-colon{display:flex;align-items:center;font-size:18px;font-weight:700;color:#8E8E93;flex-shrink:0;}
+
+/* ── BIG CTA BUTTON ── */
+.cta{
+  display:flex;align-items:center;justify-content:center;
+  width:calc(100% - 32px);margin:8px 16px 0;
+  padding:16px;border:none;border-radius:14px;
+  font-family:inherit;font-size:17px;font-weight:700;
+  cursor:pointer;-webkit-tap-highlight-color:transparent;
+  transition:all 0.15s;min-height:54px;
+}
+.cta-green{background:#34C759;color:#fff;}
+.cta-green:active{background:#2AAE4F;}
+.cta-blue{background:#007AFF;color:#fff;}
+.cta-blue:active{background:#0063D1;}
+
+/* ── LOOKUP RESULT ── */
+.rcard{
+  background:#fff;border-radius:10px;
+  border:0.5px solid rgba(0,0,0,0.1);
+  padding:14px 15px;margin-bottom:8px;
+}
+.rcard-day{font-size:12px;font-weight:700;color:#8E8E93;text-transform:uppercase;letter-spacing:0.3px;margin-bottom:8px;}
+.rbadges{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:6px;}
+.rb{display:inline-block;padding:4px 10px;border-radius:999px;font-size:12px;font-weight:600;}
+.rb-b{background:#EBF5FF;color:#004EA2;}
+.rb-g{background:#E8FAF0;color:#1A6E35;}
+.rb-r{background:#FFF0EF;color:#C0392B;}
+.rloc{font-size:12px;color:#6E6E73;line-height:1.6;}
+
+/* ── IFIELD (styled input group) ── */
+.ifield{padding:0 16px;border-bottom:0.5px solid rgba(0,0,0,0.08);}
+.ifield:last-child{border-bottom:none;}
+.ifield label{display:block;font-size:12px;font-weight:500;color:#8E8E93;margin-top:13px;margin-bottom:4px;}
+.ifield .if-row{display:flex;align-items:center;padding-bottom:13px;}
+.ifield .if-row input{
+  flex:1;border:none;outline:none;
+  font-family:inherit;font-size:16px;color:#1C1C1E;
+  background:transparent;-webkit-appearance:none;
+  min-height:32px;
+}
+.ifield .if-row input::placeholder{color:#C7C7CC;}
+
+/* ── BUTTON VARIANTS ── */
+.btn{
+  display:inline-flex;align-items:center;justify-content:center;gap:6px;
+  border:none;border-radius:12px;
+  font-family:inherit;font-weight:600;cursor:pointer;
+  -webkit-tap-highlight-color:transparent;
+  white-space:nowrap;transition:all 0.15s;
+}
+.btn-full{width:100%;padding:15px;font-size:16px;border-radius:13px;}
+.btn-sm{padding:8px 16px;font-size:13px;border-radius:8px;}
+.btn-blue{background:#007AFF;color:#fff;}
+.btn-blue:active{background:#0063D1;}
+.btn-purple{background:#AF52DE;color:#fff;}
+.btn-purple:active{background:#9340C3;}
+.btn-red{background:#FF3B30;color:#fff;}
+.btn-red:active{background:#D32018;}
+.btn-gray{background:#E5E5EA;color:#1C1C1E;}
+.btn-gray:active{background:#D1D1D6;}
+.btn-excel{background:#1E7A45;color:#fff;}
+.btn-excel:active{background:#155A32;}
+.btn-green{background:#34C759;color:#fff;}
+.btn-green:active{background:#2AAE4F;}
+
+/* ── ADMIN LOGIN ── */
+.login-wrap{max-width:380px;margin:0 auto;padding:40px 16px 32px;}
+.login-icon{font-size:52px;text-align:center;margin-bottom:16px;line-height:1;}
+.login-title{font-size:22px;font-weight:700;text-align:center;color:#1C1C1E;margin-bottom:4px;}
+.login-sub{font-size:14px;color:#8E8E93;text-align:center;margin-bottom:28px;}
+
+/* ── ADMIN TABLE ── */
+.tscroll{overflow-x:auto;-webkit-overflow-scrolling:touch;border-radius:12px;border:0.5px solid rgba(0,0,0,0.12);}
+table{width:100%;border-collapse:collapse;min-width:680px;background:#fff;}
+th{background:#F2F2F7;padding:11px 12px;text-align:left;font-size:12px;font-weight:600;color:#8E8E93;white-space:nowrap;border-bottom:0.5px solid rgba(0,0,0,0.1);}
+td{padding:12px;font-size:13px;border-bottom:0.5px solid rgba(0,0,0,0.06);white-space:nowrap;color:#1C1C1E;}
+tr:last-child td{border-bottom:none;}
+tr:hover td{background:#FAFAFA;}
+
+/* ── ACT ROW ── */
+.act-row{display:flex;gap:8px;padding:0 16px;margin-bottom:10px;flex-wrap:wrap;}
+.act-row .btn{flex:1;min-width:0;padding:13px 10px;font-size:14px;}
+
+/* ── FILTER ROW ── */
+.filter-row{display:flex;gap:8px;padding:0 16px;margin-bottom:10px;}
+.filter-row input,.filter-row select{
+  flex:1;
+  border:1.5px solid #E5E5EA;border-radius:10px;
+  padding:11px 12px;font-family:inherit;font-size:14px;
+  background:#fff;color:#1C1C1E;outline:none;
+}
+.filter-row input:focus,.filter-row select:focus{border-color:#007AFF;}
+
+/* ── ADMIN STRIP ── */
+.admin-strip{
+  background:#AF52DE;color:#fff;
+  padding:12px 20px;
+  display:flex;align-items:center;justify-content:space-between;
+  flex-shrink:0;
+}
+.as-title{font-size:15px;font-weight:700;}
+.as-count{font-size:13px;opacity:0.8;}
+
+/* ── DISCLOSURE ── */
+details>summary{
+  cursor:pointer;font-size:14px;font-weight:600;color:#007AFF;
+  padding:12px 16px;list-style:none;display:flex;align-items:center;gap:6px;
+}
+details>summary::-webkit-details-marker{display:none;}
+details[open]>summary{color:#5856D6;}
+
+/* ── EMPTY ── */
+.empty{text-align:center;padding:60px 20px;color:#8E8E93;font-size:15px;}
+.empty-ico{font-size:44px;margin-bottom:12px;}
+
+/* ── MODAL (sheet from bottom) ── */
+.modal-bg{
+  display:none;position:fixed;inset:0;
+  background:rgba(0,0,0,0.45);z-index:300;
+  align-items:flex-end;justify-content:center;
+}
+.modal-bg.open{display:flex;}
+.modal{
+  background:#fff;border-radius:16px 16px 0 0;
+  padding:24px 20px;
+  padding-bottom:calc(20px + env(safe-area-inset-bottom,0px));
+  width:100%;max-width:480px;
+}
+.modal h3{font-size:18px;font-weight:700;text-align:center;margin-bottom:8px;}
+.modal p{font-size:15px;color:#6E6E73;text-align:center;line-height:1.6;margin-bottom:20px;}
+.modal-acts{display:grid;gap:8px;}
+
+/* ── TOAST ── */
+.toast{
+  position:fixed;
+  bottom:calc(28px + env(safe-area-inset-bottom,0px));
+  left:50%;
+  transform:translateX(-50%) translateY(100px);
+  background:rgba(28,28,30,0.9);color:#fff;
+  padding:12px 24px;border-radius:24px;
+  font-size:14px;font-weight:500;
+  transition:transform 0.28s cubic-bezier(.4,0,.2,1);
+  z-index:9999;white-space:nowrap;max-width:90vw;
+  -webkit-backdrop-filter:blur(10px);backdrop-filter:blur(10px);
+}
+.toast.show{transform:translateX(-50%) translateY(0);}
+.toast.ok{background:rgba(52,199,89,0.92);}
+.toast.warn{background:rgba(255,149,0,0.92);}
+</style>
+</head>
+<body>
+
+<!-- ════════════════════════════════════════
+     PAGE: MAIN (신청 / 조회·수정)
+════════════════════════════════════════ -->
+<div class="page active" id="page-main">
+
+  <div class="hero">
+    <div class="safe-top-white"></div>
+    <div class="hero-inner">
+      <a href="/" style="display:inline-block;font-size:13px;color:#8E8E93;text-decoration:none;margin-bottom:10px;">← 테이크원 홈</a>
+      <div class="hero-badge">🚌 테이크원 · 2026 여름방학</div>
+      <div class="hero-title">차량 등·하원 신청</div>
+      <div class="hero-sub">요일별 등원·하원 정보를 간편하게 신청하세요</div>
+    </div>
+  </div>
+
+  <div class="seg-bar">
+    <div class="seg">
+      <button class="seg-btn on" onclick="mainTab('form',this)">신청하기</button>
+      <button class="seg-btn" onclick="mainTab('lookup',this)">조회·수정</button>
+    </div>
+  </div>
+
+  <div class="scr" id="main-scr">
+    <!-- 신청하기 탭 -->
+    <div id="tab-form" class="wrap">
+      <p class="sh">① 학생 정보</p>
+      <div class="gcard">
+        <div class="ifield">
+          <label>학생 이름</label>
+          <div class="if-row">
+            <input type="text" id="nameInput" placeholder="이름 입력" maxlength="20"
+              onkeydown="if(event.key==='Enter')focusPin()">
+          </div>
+        </div>
+        <div class="ifield">
+          <label>비밀번호 (PIN)</label>
+          <div class="if-row">
+            <input type="password" id="pinInput" placeholder="4자리 숫자"
+              maxlength="4" inputmode="numeric" pattern="[0-9]*"
+              oninput="this.value=this.value.replace(/\D/g,'')"
+              onkeydown="if(event.key==='Enter')addStudent()"
+              style="letter-spacing:4px;">
+            <button class="eye-btn" style="position:static;margin-left:4px;" onclick="toggleEye('pinInput')" type="button">👁</button>
+          </div>
+        </div>
+        <div class="emsg" id="err-student"></div>
+        <div class="info-strip">
+          <span class="ii">ℹ️</span>
+          <span>PIN 4자리 설정 시 나중에 신청을 수정할 수 있습니다</span>
+        </div>
+        <div style="padding:12px 16px 14px;">
+          <button class="btn btn-blue btn-full" onclick="addStudent()">학생 추가</button>
+        </div>
+        <div class="chips" id="chips"></div>
+      </div>
+
+      <div id="building-sec" style="display:none;">
+        <p class="sh">② 관 선택</p>
+        <div class="gcard" style="padding:14px 16px;">
+          <div class="opts" id="bldgOpts"></div>
+        </div>
+      </div>
+
+      <div id="days-sec" style="display:none;">
+        <p class="sh">③ 등원 요일 <span class="sh-note">(복수 선택 가능)</span></p>
+        <div class="gcard">
+          <div class="days-grid" id="daysGrid"></div>
+        </div>
+        <div id="dayForms"></div>
+
+        <div id="memoArea" style="display:none;">
+          <p class="sh" style="margin-top:20px;">⑤ 메모 <span class="sh-note">(선택)</span></p>
+          <div class="gcard">
+            <textarea class="memo-area" maxlength="200" id="memoInput" placeholder="예) 방학 등하원 기간 및 전달사항 등을 자유롭게 적어주세요" oninput="onMemoInput(this.value)"></textarea>
+          </div>
+        </div>
+
+        <div id="submitArea" style="display:none;margin-top:8px;">
+          <button class="cta cta-green" id="submitBtn" onclick="submitAll()">✅ 신청 완료</button>
+        </div>
+      </div>
+      <div class="safe-bottom"></div>
+    </div>
+
+    <!-- 조회·수정 탭 -->
+    <div id="tab-lookup" class="wrap" style="display:none;">
+      <p class="sh">이름 &amp; PIN으로 조회</p>
+      <div class="gcard">
+        <div class="ifield">
+          <label>학생 이름</label>
+          <div class="if-row">
+            <input type="text" id="lookupName" placeholder="이름 입력" maxlength="20"
+              onkeydown="if(event.key==='Enter')document.getElementById('lookupPin').focus()">
+          </div>
+        </div>
+        <div class="ifield">
+          <label>비밀번호 (PIN)</label>
+          <div class="if-row">
+            <input type="password" id="lookupPin" placeholder="4자리 숫자"
+              maxlength="4" inputmode="numeric" pattern="[0-9]*"
+              oninput="this.value=this.value.replace(/\D/g,'')"
+              onkeydown="if(event.key==='Enter')lookupRecord()"
+              style="letter-spacing:4px;">
+            <button class="eye-btn" style="position:static;margin-left:4px;" onclick="toggleEye('lookupPin')" type="button">👁</button>
+          </div>
+        </div>
+        <div class="emsg" id="err-lookup"></div>
+        <div style="padding:12px 16px 14px;">
+          <button class="btn btn-blue btn-full" id="lookupBtn" onclick="lookupRecord()">조회하기</button>
+        </div>
+      </div>
+      <div id="lookupResult" style="display:none;padding:0 16px;margin-top:4px;"></div>
+      <div class="safe-bottom"></div>
+    </div>
+  </div>
+</div>
+
+<!-- ════════════════════════════════════════
+     PAGE: EDIT
+════════════════════════════════════════ -->
+<div class="page" id="page-edit">
+  <div class="safe-top-white"></div>
+  <div class="nav nav-white">
+    <button class="nav-side" onclick="cancelEdit()">
+      <svg class="nav-chevron" viewBox="0 0 10 17" fill="none"><path d="M9 1L1 8.5L9 16" stroke="#007AFF" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      취소
+    </button>
+    <span class="nav-center" id="edit-nav-title">신청 수정</span>
+    <button class="nav-side right green-txt" onclick="saveEdit()">저장</button>
+  </div>
+  <div class="scr">
+    <div class="wrap">
+      <div id="editForms"></div>
+      <div style="margin-top:8px;">
+        <button class="cta cta-green" id="editSaveBtn" onclick="saveEdit()">💾 수정 저장</button>
+      </div>
+    </div>
+    <div class="safe-bottom"></div>
+  </div>
+</div>
+
+<!-- MODAL: 신청 완료 -->
+<div class="modal-bg" id="modal-done">
+  <div class="modal" style="text-align:center;">
+    <div style="font-size:56px;line-height:1;margin-bottom:16px;">🎉</div>
+    <h3 style="font-size:20px;font-weight:700;margin-bottom:10px;">신청이 완료되었습니다!</h3>
+    <p style="font-size:15px;color:#6E6E73;line-height:1.7;margin-bottom:24px;">
+      차량 등·하원 신청이<br>정상적으로 접수되었습니다
+    </p>
+    <button class="btn btn-green btn-full" style="font-size:17px;padding:15px;" onclick="closeDoneModal()">확인</button>
+  </div>
+</div>
+
+<!-- 제출 전 검토 모달 -->
+<div class="modal-bg" id="modal-review">
+  <div class="modal">
+    <h3 style="font-size:18px;font-weight:700;margin-bottom:4px;text-align:center;">신청 내용 확인</h3>
+    <p style="font-size:13px;color:#8E8E93;text-align:center;margin-bottom:14px;">아래 내용으로 신청할까요?</p>
+    <div class="rv-body" id="review-body"></div>
+    <div style="display:grid;gap:8px;margin-top:16px;">
+      <button class="btn btn-green btn-full" id="reviewOkBtn" onclick="doSubmit()">✅ 신청 완료</button>
+      <button class="btn btn-gray btn-full" onclick="closeReview()">← 다시 수정</button>
+    </div>
+  </div>
+</div>
+
+<!-- 로딩 오버레이 -->
+<div class="loading-ov" id="loading-ov"><div class="spinner"></div></div>
+
+<div class="toast" id="toast"></div>
+<script>
+const DAYS=['월요일','화요일','수요일','목요일','금요일'];
+const TIMES=['1부','2부','3부','4부','5부'];
+const METHODS=['차량','도보','개별','기타'];
+const HOURS=[1,2,3,4,5,6,7,8,9,10,11,12].map(h=>h+'시');
+const MINS=['00','10','20','30','40','50'].map(m=>m+'분');
+const BUILDINGS=['본관','별관','소양관'];
+function escapeHtml(s){return String(s==null?'':s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');}
+
+/* ── API helper ── */
+async function api(path,{method='GET',body}={}){
+  const headers={};
+  if(body)headers['Content-Type']='application/json';
+  const res=await fetch(path,{method,headers,body:body?JSON.stringify(body):undefined});
+  let data={};try{data=await res.json();}catch{}
+  if(!res.ok){const err=new Error(data.error||('요청 실패 ('+res.status+')'));err.status=res.status;throw err;}
+  return data;
+}
+
+/* ── PAGE / TAB ── */
+function showPage(id){document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));document.getElementById('page-'+id).classList.add('active');try{document.querySelector('#page-'+id+' .scr').scrollTop=0;}catch{}}
+function mainTab(t,btn){
+  document.getElementById('tab-form').style.display=t==='form'?'':'none';
+  document.getElementById('tab-lookup').style.display=t==='lookup'?'':'none';
+  document.querySelectorAll('.seg-btn').forEach(b=>b.classList.remove('on'));
+  if(btn)btn.classList.add('on');
+}
+function toggleEye(id){const el=document.getElementById(id);if(el)el.type=el.type==='password'?'text':'password';}
+function focusPin(){document.getElementById('pinInput').focus();}
+
+/* ── FORM STATE ── */
+let students=[],selIdx=-1,selDays={},formSt={},memoSt={},buildingSt={};
+function cur(){return selIdx>=0?students[selIdx]:null;}
+
+/* ── STUDENT CRUD (in-memory, 제출 전까지) ── */
+function addStudent(){
+  const name=document.getElementById('nameInput').value.trim();
+  const pin=document.getElementById('pinInput').value.trim();
+  const err=document.getElementById('err-student');
+  if(!name){showE(err,'이름을 입력해 주세요');return;}
+  if(!/^\d{4}$/.test(pin)){showE(err,'PIN은 숫자 4자리여야 합니다');return;}
+  if(students.find(s=>s.name===name)){showE(err,'이미 추가된 이름입니다');return;}
+  err.classList.remove('show');
+  students.push({name,pin});selDays[name]=[];formSt[name]={};memoSt[name]='';buildingSt[name]='';
+  document.getElementById('nameInput').value='';document.getElementById('pinInput').value='';
+  renderChips();selStudent(students.length-1);
+}
+function removeStudent(i){
+  const{name}=students[i];students.splice(i,1);delete selDays[name];delete formSt[name];delete memoSt[name];delete buildingSt[name];
+  if(selIdx===i)selIdx=students.length>0?0:-1;else if(selIdx>i)selIdx--;
+  renderChips();renderDaysSec();
+}
+function selStudent(i){selIdx=i;renderChips();renderDaysSec();}
+function renderChips(){
+  document.getElementById('chips').innerHTML=students.map((s,i)=>
+    `<button class="chip ${i===selIdx?'on':''}" onclick="selStudent(${i})">${s.name}<span class="chip-x" onclick="event.stopPropagation();removeStudent(${i})">×</span></button>`
+  ).join('');
+}
+
+/* ── DAYS ── */
+function renderDaysSec(){
+  const s=cur();
+  const bsec=document.getElementById('building-sec'),sec=document.getElementById('days-sec');
+  if(!s){bsec.style.display='none';sec.style.display='none';return;}
+  bsec.style.display='';renderBuildings();
+  if(!buildingSt[s.name]){sec.style.display='none';return;}
+  sec.style.display='';
+  const mi=document.getElementById('memoInput');if(mi)mi.value=(memoSt[s.name]||'');
+  renderDays();renderDayForms();
+}
+function renderBuildings(){
+  const s=cur();if(!s)return;
+  const cur_b=buildingSt[s.name]||'';
+  document.getElementById('bldgOpts').innerHTML=BUILDINGS.map(b=>
+    `<button class="opt ${cur_b===b?'on':''}" onclick="selectBuilding('${b}')">${b}</button>`
+  ).join('');
+}
+function selectBuilding(b){
+  const s=cur();if(!s)return;
+  buildingSt[s.name]=b;
+  renderDaysSec();
+}
+function onMemoInput(v){const s=cur();if(s)memoSt[s.name]=v;}
+function renderDays(){
+  const s=cur();if(!s)return;
+  const on=selDays[s.name]||[];
+  document.getElementById('daysGrid').innerHTML=DAYS.map(d=>
+    `<div class="dtile ${on.includes(d)?'on':''}" onclick="toggleDay('${d}')">
+      <div class="dname">${d.replace('요일','')}</div>
+      <div class="dtick">${on.includes(d)?'✓':'○'}</div>
+    </div>`
+  ).join('');
+}
+function toggleDay(d){
+  const s=cur();if(!s)return;
+  const arr=selDays[s.name],i=arr.indexOf(d);
+  if(i>=0){arr.splice(i,1);delete(formSt[s.name]||{})[d];}
+  else{arr.push(d);arr.sort((a,b)=>DAYS.indexOf(a)-DAYS.indexOf(b));
+    if(!formSt[s.name])formSt[s.name]={};
+    formSt[s.name][d]={time:'',arrLoc:'',schoolHour:'',schoolMin:'',arrMethod:'',depLoc:'',depMethod:''};
+  }
+  renderDays();renderDayForms();
+}
+
+/* ── DAY FORMS ── */
+function renderDayForms(){
+  const s=cur(),cont=document.getElementById('dayForms'),sub=document.getElementById('submitArea'),mem=document.getElementById('memoArea');
+  if(!s||!selDays[s.name]?.length){cont.innerHTML='';sub.style.display='none';if(mem)mem.style.display='none';return;}
+  cont.innerHTML=selDays[s.name].map(d=>buildDF(d,s.name)).join('');sub.style.display='';
+  if(mem){mem.style.display='';const mi=document.getElementById('memoInput');if(mi)mi.value=(memoSt[s.name]||'');}
+}
+function buildDF(d,sn){
+  const fd=(formSt[sn]||{})[d]||{},uid=d.replace('요일','');
+  return `
+  <p class="sh" style="margin-top:20px;">④ ${d} 세부 정보</p>
+  <div class="dpanel">
+    <div class="dpanel-head"><div class="dpanel-dot"></div>${d}</div>
+    <div class="pfield" id="pf_t_${uid}">
+      <div class="pfield-lbl">희망 수업 시간<span class="req">*</span></div>
+      <div class="opts">${TIMES.map(t=>`<button class="opt ${fd.time===t?'on':''}" onclick="setOpt('${d}','time','${t}',this)">${t}</button>`).join('')}</div>
+      <div class="perr">수업 시간을 선택해 주세요</div>
+    </div>
+    <div class="pfield">
+      <div class="pfield-lbl">등원 장소</div>
+      <input type="text" maxlength="40" placeholder="예) OO아파트 정문" value="${fd.arrLoc||''}" oninput="setTx('${d}','arrLoc',this.value)">
+    </div>
+    <div class="pfield">
+      <div class="pfield-lbl">학교 하교 시간</div>
+      <div class="time-drop-row">
+        ${seldropHTML(d,'schoolHour','시간',HOURS,fd.schoolHour,'form')}
+        <span class="time-drop-colon">:</span>
+        ${seldropHTML(d,'schoolMin','분',MINS,fd.schoolMin,'form')}
+      </div>
+    </div>
+    <div class="pfield" id="pf_a_${uid}">
+      <div class="pfield-lbl">등원 방법<span class="req">*</span></div>
+      <div class="opts">${METHODS.map(m=>`<button class="opt ${fd.arrMethod===m?'on':''}" onclick="setOpt('${d}','arrMethod','${m}',this)">${m}</button>`).join('')}</div>
+      <div class="perr">등원 방법을 선택해 주세요</div>
+    </div>
+    <div class="pfield">
+      <div class="pfield-lbl">하원 장소</div>
+      <input type="text" maxlength="40" placeholder="예) OO아파트 정문" value="${fd.depLoc||''}" oninput="setTx('${d}','depLoc',this.value)">
+    </div>
+    <div class="pfield" id="pf_d_${uid}">
+      <div class="pfield-lbl">하원 방법<span class="req">*</span></div>
+      <div class="opts">${METHODS.map(m=>`<button class="opt ${fd.depMethod===m?'on':''}" onclick="setOpt('${d}','depMethod','${m}',this)">${m}</button>`).join('')}</div>
+      <div class="perr">하원 방법을 선택해 주세요</div>
+    </div>
+  </div>`;
+}
+function setOpt(d,k,v,btn){
+  const s=cur();if(!s)return;
+  if(!formSt[s.name])formSt[s.name]={};if(!formSt[s.name][d])formSt[s.name][d]={};
+  formSt[s.name][d][k]=v;
+  btn.closest('.opts').querySelectorAll('.opt').forEach(b=>b.classList.remove('on'));btn.classList.add('on');
+  const uid=d.replace('요일',''),fid=k==='time'?`pf_t_${uid}`:k==='arrMethod'?`pf_a_${uid}`:`pf_d_${uid}`;
+  document.getElementById(fid)?.classList.remove('fi-err');
+}
+function setTx(d,k,v){
+  const s=cur();if(!s)return;
+  if(!formSt[s.name])formSt[s.name]={};if(!formSt[s.name][d])formSt[s.name][d]={};
+  formSt[s.name][d][k]=v;
+}
+
+/* ── 커스텀 드롭다운(항상 아래로 열림) ── */
+function seldropHTML(day,key,placeholder,options,current,mode){
+  const val=current||'';
+  return `<div class="seldrop${val?'':' ph'}">
+    <button type="button" class="seldrop-btn" onclick="dropToggle(this)">
+      <span class="seldrop-val">${val||placeholder}</span>
+      <svg class="seldrop-chev" viewBox="0 0 12 8" fill="none"><path d="M1 1l5 5 5-5" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
+    </button>
+    <div class="seldrop-list">
+      ${options.map(o=>`<button type="button" class="seldrop-item" onclick="dropPick(this,'${day}','${key}','${o}','${mode}')">${o}</button>`).join('')}
+    </div>
+  </div>`;
+}
+function dropToggle(btn){
+  const wrap=btn.closest('.seldrop');
+  const open=wrap.classList.contains('open');
+  document.querySelectorAll('.seldrop.open').forEach(el=>el.classList.remove('open'));
+  if(!open)wrap.classList.add('open');
+}
+function dropPick(btn,day,key,val,mode){
+  if(mode==='edit')setETx(day,key,val);else setTx(day,key,val);
+  const wrap=btn.closest('.seldrop');
+  wrap.querySelector('.seldrop-val').textContent=val;
+  wrap.classList.remove('ph');wrap.classList.remove('open');
+}
+document.addEventListener('click',function(e){
+  if(!e.target.closest('.seldrop'))document.querySelectorAll('.seldrop.open').forEach(el=>el.classList.remove('open'));
+});
+
+/* ── 요일별 폼 -> 서버 payload ── */
+function buildPayloadDays(state){
+  return Object.keys(state).map(d=>{const fd=state[d]||{};
+    return {day:d,time:fd.time||'',arrLoc:fd.arrLoc||'',
+      schoolTime:(fd.schoolHour&&fd.schoolMin)?fd.schoolHour+':'+fd.schoolMin:'',
+      arrMethod:fd.arrMethod||'',depLoc:fd.depLoc||'',depMethod:fd.depMethod||''};});
+}
+
+/* ── SUBMIT (검토 → 서버 저장) ── */
+function submitAll(){
+  const s=cur();if(!s)return toast('학생을 선택해 주세요');
+  if(!buildingSt[s.name])return toast('관을 선택해 주세요');
+  const days=selDays[s.name]||[];if(!days.length)return toast('요일을 선택해 주세요');
+  let ok=true;
+  days.forEach(d=>{const fd=(formSt[s.name]||{})[d]||{},uid=d.replace('요일','');
+    if(!fd.time){document.getElementById(`pf_t_${uid}`)?.classList.add('fi-err');ok=false;}
+    if(!fd.arrMethod){document.getElementById(`pf_a_${uid}`)?.classList.add('fi-err');ok=false;}
+    if(!fd.depMethod){document.getElementById(`pf_d_${uid}`)?.classList.add('fi-err');ok=false;}
+  });
+  if(!ok)return toast('⚠️ 필수 항목을 모두 선택해 주세요');
+  openReview(s,days);
+}
+function openReview(s,days){
+  const rows=days.map(d=>{const fd=formSt[s.name][d];
+    const st=(fd.schoolHour&&fd.schoolMin)?`${fd.schoolHour} ${fd.schoolMin}`:'';
+    return `<div class="rv-day">
+      <div class="rv-dh">${d}</div>
+      <div class="rv-line"><span>수업</span><b>${escapeHtml(fd.time||'-')}</b></div>
+      <div class="rv-line"><span>등원</span><b>${escapeHtml(fd.arrMethod||'-')}${fd.arrLoc?' · '+escapeHtml(fd.arrLoc):''}</b></div>
+      <div class="rv-line"><span>하원</span><b>${escapeHtml(fd.depMethod||'-')}${fd.depLoc?' · '+escapeHtml(fd.depLoc):''}</b></div>
+      ${st?`<div class="rv-line"><span>하교</span><b>${escapeHtml(st)}</b></div>`:''}
+    </div>`;}).join('');
+  const memo=memoSt[s.name]||'';
+  document.getElementById('review-body').innerHTML=
+    `<div class="rv-name">${escapeHtml(s.name)} 학생 · ${escapeHtml(buildingSt[s.name]||'')} · ${days.length}개 요일</div>`+rows
+    +(memo?`<div class="rv-memo">📝 ${escapeHtml(memo)}</div>`:'');
+  document.getElementById('modal-review').classList.add('open');
+}
+function closeReview(){document.getElementById('modal-review').classList.remove('open');}
+async function doSubmit(){
+  const s=cur();if(!s)return;
+  const days=selDays[s.name]||[];
+  const stateForDays={};days.forEach(d=>stateForDays[d]=formSt[s.name][d]);
+  const payloadDays=buildPayloadDays(stateForDays);
+  const btn=document.getElementById('reviewOkBtn');
+  btn.disabled=true;btn.textContent='제출 중…';showLoading(true);
+  try{
+    const r=await api('/api/records',{method:'POST',body:{name:s.name,pin:s.pin,building:buildingSt[s.name]||'',memo:memoSt[s.name]||'',days:payloadDays}});
+    closeReview();openDoneModal();
+    if(r.overwritten&&r.overwritten.length)setTimeout(()=>toast('기존 '+r.overwritten.join(', ')+' 신청을 새 내용으로 변경했어요','ok'),400);
+    selDays[s.name]=[];formSt[s.name]={};memoSt[s.name]='';buildingSt[s.name]='';renderDaysSec();
+  }catch(e){toast('⚠️ '+e.message);}
+  finally{btn.disabled=false;btn.textContent='✅ 신청 완료';showLoading(false);}
+}
+
+/* ── LOOKUP (서버 조회) ── */
+let lookupRows=[];
+async function lookupRecord(){
+  const name=document.getElementById('lookupName').value.trim();
+  const pin=document.getElementById('lookupPin').value.trim();
+  const err=document.getElementById('err-lookup'),resEl=document.getElementById('lookupResult');
+  if(!name){showE(err,'이름을 입력해 주세요');return;}
+  if(!pin){showE(err,'PIN을 입력해 주세요');return;}
+  err.classList.remove('show');
+  const btn=document.getElementById('lookupBtn');btn.disabled=true;btn.textContent='조회 중…';showLoading(true);
+  try{
+    const r=await api('/api/lookup',{method:'POST',body:{name,pin}});
+    lookupRows=r.records||[];
+    if(!lookupRows.length){showE(err,'일치하는 신청 내역이 없습니다');resEl.style.display='none';return;}
+    resEl.style.display='';
+    resEl.innerHTML=
+      `<p style="font-size:13px;font-weight:600;color:#8E8E93;margin-bottom:8px;">${name} 학생${lookupRows[0].관?' · '+escapeHtml(lookupRows[0].관):''} 신청 내역 ${lookupRows.length}건</p>`
+      +lookupRows.map(r=>`
+        <div class="rcard">
+          <div class="rcard-day">${r.요일}</div>
+          <div class="rbadges">
+            <span class="rb rb-b">${r.희망수업시간}</span>
+            <span class="rb rb-g">등원 ${r.등원방법||'-'}</span>
+            <span class="rb rb-r">하원 ${r.하원방법||'-'}</span>
+          </div>
+          <div class="rloc">등원: ${r.등원장소||'-'} &nbsp;·&nbsp; 하원: ${r.하원장소||'-'}</div>
+          ${r.학교하교시간?`<div class="rloc" style="margin-top:2px;">🏫 하교 시간: ${r.학교하교시간.replace(':','  ')}</div>`:''}
+        </div>`).join('')
+      +(lookupRows[0].메모?`<div class="rcard" style="background:#FFFDF3;border-color:rgba(180,140,0,0.18);"><div class="rcard-day">📝 메모</div><div class="rloc" style="white-space:pre-wrap;color:#5A4A00;">${escapeHtml(lookupRows[0].메모)}</div></div>`:'')
+      +`<button class="cta cta-blue" style="margin:8px 0 0;" onclick="openEdit()">✏️ 수정하기</button>`;
+  }catch(e){showE(err,e.message);resEl.style.display='none';}
+  finally{btn.disabled=false;btn.textContent='조회하기';showLoading(false);}
+}
+
+/* ── EDIT ── */
+let editName='',editPin='',editSt={},editMemo='',editBuilding='';
+function openEdit(){
+  if(!lookupRows.length)return;
+  editName=lookupRows[0].이름;editPin=lookupRows[0].pin;editMemo=lookupRows[0].메모||'';editBuilding=lookupRows[0].관||'';
+  editSt={};lookupRows.forEach(r=>{const st=(r.학교하교시간||'').split(':');editSt[r.요일]={time:r.희망수업시간,arrLoc:r.등원장소,schoolHour:st[0]||'',schoolMin:st[1]||'',arrMethod:r.등원방법,depLoc:r.하원장소,depMethod:r.하원방법};});
+  document.getElementById('edit-nav-title').textContent=`${editName} 수정`;
+  renderEditForms();showPage('edit');
+}
+function renderEditBuildings(){
+  document.getElementById('editBldgOpts').innerHTML=BUILDINGS.map(b=>
+    `<button class="opt ${editBuilding===b?'on':''}" onclick="selectEditBuilding('${b}')">${b}</button>`
+  ).join('');
+}
+function selectEditBuilding(b){editBuilding=b;renderEditBuildings();}
+function renderEditForms(){
+  const days=Object.keys(editSt).sort((a,b)=>DAYS.indexOf(a)-DAYS.indexOf(b));
+  document.getElementById('editForms').innerHTML=
+  `<p class="sh" style="margin-top:16px;">관 선택</p>
+   <div class="gcard" style="padding:14px 16px;"><div class="opts" id="editBldgOpts"></div></div>`
+  +days.map((d,idx)=>{
+    const fd=editSt[d],uid=d.replace('요일','');
+    return `
+    <p class="sh" style="margin-top:20px;">${d}</p>
+    <div class="dpanel">
+      <div class="dpanel-head"><div class="dpanel-dot"></div>${d}</div>
+      <div class="pfield" id="ef_t_${uid}">
+        <div class="pfield-lbl">희망 수업 시간<span class="req">*</span></div>
+        <div class="opts">${TIMES.map(t=>`<button class="opt ${fd.time===t?'on':''}" onclick="setEOpt('${d}','time','${t}',this)">${t}</button>`).join('')}</div>
+        <div class="perr">수업 시간을 선택해 주세요</div>
+      </div>
+      <div class="pfield">
+        <div class="pfield-lbl">등원 장소</div>
+        <input type="text" maxlength="40" placeholder="예) OO아파트 정문" value="${fd.arrLoc||''}" oninput="setETx('${d}','arrLoc',this.value)">
+      </div>
+      <div class="pfield">
+        <div class="pfield-lbl">학교 하교 시간</div>
+        <div class="time-drop-row">
+          ${seldropHTML(d,'schoolHour','시간',HOURS,fd.schoolHour,'edit')}
+          <span class="time-drop-colon">:</span>
+          ${seldropHTML(d,'schoolMin','분',MINS,fd.schoolMin,'edit')}
+        </div>
+      </div>
+      <div class="pfield" id="ef_a_${uid}">
+        <div class="pfield-lbl">등원 방법<span class="req">*</span></div>
+        <div class="opts">${METHODS.map(m=>`<button class="opt ${fd.arrMethod===m?'on':''}" onclick="setEOpt('${d}','arrMethod','${m}',this)">${m}</button>`).join('')}</div>
+        <div class="perr">등원 방법을 선택해 주세요</div>
+      </div>
+      <div class="pfield">
+        <div class="pfield-lbl">하원 장소</div>
+        <input type="text" maxlength="40" placeholder="예) OO아파트 정문" value="${fd.depLoc||''}" oninput="setETx('${d}','depLoc',this.value)">
+      </div>
+      <div class="pfield" id="ef_d_${uid}">
+        <div class="pfield-lbl">하원 방법<span class="req">*</span></div>
+        <div class="opts">${METHODS.map(m=>`<button class="opt ${fd.depMethod===m?'on':''}" onclick="setEOpt('${d}','depMethod','${m}',this)">${m}</button>`).join('')}</div>
+        <div class="perr">하원 방법을 선택해 주세요</div>
+      </div>
+    </div>`;
+  }).join('')
+  +`<p class="sh" style="margin-top:20px;">메모 <span class="sh-note">(선택)</span></p>
+    <div class="gcard"><textarea class="memo-area" maxlength="200" id="editMemoInput" placeholder="예) 방학 등하원 기간 및 전달사항 등을 자유롭게 적어주세요" oninput="editMemo=this.value">${escapeHtml(editMemo)}</textarea></div>`;
+  renderEditBuildings();
+}
+function setEOpt(d,k,v,btn){
+  if(!editSt[d])editSt[d]={};editSt[d][k]=v;
+  btn.closest('.opts').querySelectorAll('.opt').forEach(b=>b.classList.remove('on'));btn.classList.add('on');
+  const uid=d.replace('요일',''),fid=k==='time'?`ef_t_${uid}`:k==='arrMethod'?`ef_a_${uid}`:`ef_d_${uid}`;
+  document.getElementById(fid)?.classList.remove('fi-err');
+}
+function setETx(d,k,v){if(!editSt[d])editSt[d]={};editSt[d][k]=v;}
+async function saveEdit(){
+  const days=Object.keys(editSt);let ok=true;
+  days.forEach(d=>{const fd=editSt[d],uid=d.replace('요일','');
+    if(!fd.time){document.getElementById(`ef_t_${uid}`)?.classList.add('fi-err');ok=false;}
+    if(!fd.arrMethod){document.getElementById(`ef_a_${uid}`)?.classList.add('fi-err');ok=false;}
+    if(!fd.depMethod){document.getElementById(`ef_d_${uid}`)?.classList.add('fi-err');ok=false;}
+  });
+  if(!ok)return toast('⚠️ 필수 항목을 모두 선택해 주세요');
+  const payloadDays=buildPayloadDays(editSt);
+  const btn=document.getElementById('editSaveBtn');btn.disabled=true;btn.textContent='저장 중…';showLoading(true);
+  try{
+    await api('/api/edit',{method:'POST',body:{name:editName,pin:editPin,building:editBuilding||'',memo:editMemo||'',days:payloadDays}});
+    toast('✅ 수정이 저장되었습니다','ok');
+    showPage('main');mainTab('lookup',document.querySelectorAll('.seg-btn')[1]);
+    lookupRecord();
+  }catch(e){toast('⚠️ '+e.message);}
+  finally{btn.disabled=false;btn.textContent='💾 수정 저장';showLoading(false);}
+}
+function cancelEdit(){showPage('main');mainTab('lookup',document.querySelectorAll('.seg-btn')[1]);}
+
+/* ── DONE MODAL ── */
+function openDoneModal(){document.getElementById('modal-done').classList.add('open');}
+function closeDoneModal(){document.getElementById('modal-done').classList.remove('open');}
+
+/* ── UTILS ── */
+function showE(el,msg){el.textContent=msg;el.classList.add('show');}
+let _tt;
+function toast(msg,type=''){const el=document.getElementById('toast');el.textContent=msg;el.className='toast show'+(type?' '+type:'');clearTimeout(_tt);_tt=setTimeout(()=>el.className='toast',2800);}
+function showLoading(on){const el=document.getElementById('loading-ov');if(el)el.classList.toggle('show',!!on);}
+if('serviceWorker' in navigator){window.addEventListener('load',()=>navigator.serviceWorker.register('/sw.js').catch(()=>{}));}
+</script>
+</body>
+</html>

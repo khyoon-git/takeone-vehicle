@@ -1,14 +1,24 @@
 {
-  "name": "테이크원 차량 신청",
-  "short_name": "차량신청",
-  "description": "테이크원 차량 등·하원 신청",
+  "name": "테이크원 태권도",
+  "short_name": "테이크원",
+  "description": "테이크원 태권도 도장 홈페이지",
   "start_url": "/",
   "scope": "/",
   "display": "standalone",
   "background_color": "#F2F2F7",
   "theme_color": "#7C3AED",
   "icons": [
-    { "src": "/icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any maskable" },
-    { "src": "/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any maskable" }
+    {
+      "src": "/icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
   ]
 }
