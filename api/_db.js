@@ -38,6 +38,7 @@ export function toRecord(r) {
     id: r.id,
     이름: r.name,
     pin: r.pin,
+    관: r.building || '',
     요일: r.day,
     희망수업시간: r.class_time || '',
     등원장소: r.arrive_place || '',

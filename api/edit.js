@@ -12,6 +12,7 @@ export default async function handler(req, res) {
     const body = await readBody(req);
     const name = String(body.name || '').trim();
     const pin = String(body.pin || '').trim();
+    const building = clip(body.building, 10);
     const memo = String(body.memo || '');
     const days = Array.isArray(body.days) ? body.days : [];
     if (!name || !pin) return res.status(400).json({ error: '이름과 PIN이 필요합니다' });
@@ -28,9 +29,9 @@ export default async function handler(req, res) {
       await sql`DELETE FROM records WHERE name=${name} AND day=${day}`;
       await sql`
         INSERT INTO records
-          (name, pin, day, class_time, arrive_place, school_time, arrive_method, depart_place, depart_method, memo)
+          (name, pin, day, class_time, arrive_place, school_time, arrive_method, depart_place, depart_method, memo, building)
         VALUES
-          (${name}, ${pin}, ${day}, ${clip(d.time,10)}, ${clip(d.arrLoc,40)}, ${clip(d.schoolTime,20)}, ${clip(d.arrMethod,10)}, ${clip(d.depLoc,40)}, ${clip(d.depMethod,10)}, ${clip(memo,200)})
+          (${name}, ${pin}, ${day}, ${clip(d.time,10)}, ${clip(d.arrLoc,40)}, ${clip(d.schoolTime,20)}, ${clip(d.arrMethod,10)}, ${clip(d.depLoc,40)}, ${clip(d.depMethod,10)}, ${clip(memo,200)}, ${building})
       `;
     }
     return res.status(200).json({ ok: true });

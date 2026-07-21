@@ -13,6 +13,7 @@ CREATE TABLE IF NOT EXISTS records (
   depart_place  TEXT NOT NULL DEFAULT '',   -- 하원 장소
   depart_method TEXT NOT NULL DEFAULT '',   -- 하원 방법
   memo          TEXT NOT NULL DEFAULT '',   -- 자유 메모
+  building      TEXT NOT NULL DEFAULT '',   -- 관 (본관/별관/소양관)
   created_at    TIMESTAMPTZ NOT NULL DEFAULT now()
 );
 

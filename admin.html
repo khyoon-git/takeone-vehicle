@@ -100,6 +100,8 @@ td.days .badge{margin:2px 4px 2px 0;}
 tbody tr.grp-start td{border-top:2px solid #E2E8F0;}
 td.nm,td.num{vertical-align:top;}
 td.nm{background:#FCFCFF;}
+td.bld{vertical-align:top;background:#FCFCFF;font-weight:700;white-space:nowrap;color:#4338CA;}
+.rbld{font-size:11px;font-weight:800;color:#7C3AED;background:#F3EEFF;padding:1px 6px;border-radius:999px;margin-left:4px;}
 .empty{text-align:center;padding:64px 20px;color:var(--muted);}
 .empty-ico{font-size:44px;margin-bottom:10px;}
 
@@ -222,6 +224,10 @@ td.nm{background:#FCFCFF;}
           <option value="">전체 요일</option>
           <option>월요일</option><option>화요일</option><option>수요일</option><option>목요일</option><option>금요일</option>
         </select>
+        <select class="select" id="filterBldg" onchange="renderAdminTable()">
+          <option value="">전체 관</option>
+          <option>본관</option><option>별관</option><option>소양관</option>
+        </select>
         <span class="shown">표시 <strong id="shown-count">0</strong>명</span>
       </div>
 
@@ -229,7 +235,7 @@ td.nm{background:#FCFCFF;}
         <table>
           <thead>
             <tr>
-              <th>#</th><th>이름</th><th>요일</th><th>수업</th><th>등원장소</th>
+              <th>#</th><th>이름</th><th>관</th><th>요일</th><th>수업</th><th>등원장소</th>
               <th>하교시간</th><th>등원방법</th><th>하원장소</th><th>하원방법</th><th>메모</th><th></th>
             </tr>
           </thead>
@@ -343,7 +349,7 @@ function placeGroups(recs,placeField,timeField){
   return places.map(p=>{
     const items=map.get(p).sort((a,b)=>(a.희망수업시간||'').localeCompare(b.희망수업시간||'')||a.이름.localeCompare(b.이름,'ko'));
     return `<div class="rgroup"><div class="rgroup-h">${escapeHtml(p)}<span class="rgn">${items.length}명</span></div>`
-      +items.map(r=>{const t=((r[timeField]||'').replace(':','  ')).trim();return `<div class="ritem"><span class="rname">${escapeHtml(r.이름)}</span>${t?`<span class="rtime">${escapeHtml(t)}</span>`:''}</div>`;}).join('')
+      +items.map(r=>{const t=((r[timeField]||'').replace(':','  ')).trim();const b=(r.관||'').trim();return `<div class="ritem"><span class="rname">${escapeHtml(r.이름)}${b?` <span class="rbld">${escapeHtml(b)}</span>`:''}</span>${t?`<span class="rtime">${escapeHtml(t)}</span>`:''}</div>`;}).join('')
       +`</div>`;
   }).join('');
 }
@@ -369,12 +375,13 @@ function printView(){window.print();}
 function renderAdminTable(){
   const name=document.getElementById('filterName').value.trim().toLowerCase();
   const day=document.getElementById('filterDay').value;
+  const bldg=(document.getElementById('filterBldg')||{}).value||'';
   // 학생(이름+PIN)별로 묶기
   const map=new Map();
   records.forEach(r=>{const key=r.이름+'\u0000'+r.pin;if(!map.has(key))map.set(key,{이름:r.이름,pin:r.pin,recs:[]});map.get(key).recs.push(r);});
   let groups=[...map.values()];
   groups.forEach(g=>g.recs.sort((a,b)=>DAYS.indexOf(a.요일)-DAYS.indexOf(b.요일)));
-  groups=groups.filter(g=>(!name||g.이름.toLowerCase().includes(name)));
+  groups=groups.filter(g=>(!name||g.이름.toLowerCase().includes(name))&&(!bldg||(g.recs[0]||{}).관===bldg));
   if(day){groups=groups.map(g=>({이름:g.이름,pin:g.pin,recs:g.recs.filter(r=>r.요일===day)})).filter(g=>g.recs.length);}
   groups.sort((a,b)=>a.이름.localeCompare(b.이름,'ko'));
   const tb=document.getElementById('adminTbody'),em=document.getElementById('adminEmpty');
@@ -396,7 +403,7 @@ function renderAdminTable(){
         +`<td class="memo">${escapeHtml(r.메모)||'-'}</td>`
         +`<td><button class="btn btn-red btn-sm" onclick="adminDel(${r.id},'${(r.이름||'').replace(/'/g,"\\'")}','${r.요일}')">삭제</button></td>`;
       if(j===0){
-        html+=`<tr class="grp-start"><td class="num" rowspan="${n}">${i+1}</td><td class="nm" rowspan="${n}">${escapeHtml(g.이름)}</td>${rest}</tr>`;
+        html+=`<tr class="grp-start"><td class="num" rowspan="${n}">${i+1}</td><td class="nm" rowspan="${n}">${escapeHtml(g.이름)}</td><td class="bld" rowspan="${n}">${escapeHtml((g.recs[0]||{}).관)||'-'}</td>${rest}</tr>`;
       }else{
         html+=`<tr>${rest}</tr>`;
       }
@@ -423,9 +430,9 @@ async function clearAll(){
 function exportExcel(){
   if(!records.length)return toast('신청 내역이 없습니다');
   const sorted=[...records].sort((a,b)=>a.이름!==b.이름?a.이름.localeCompare(b.이름,'ko'):DAYS.indexOf(a.요일)-DAYS.indexOf(b.요일));
-  const data=sorted.map((r,i)=>({번호:i+1,이름:r.이름,요일:r.요일,희망수업시간:r.희망수업시간,등원장소:r.등원장소||'',학교하교시간:r.학교하교시간||'',등원방법:r.등원방법||'',하원장소:r.하원장소||'',하원방법:r.하원방법||'',메모:r.메모||''}));
+  const data=sorted.map((r,i)=>({번호:i+1,이름:r.이름,관:r.관||'',요일:r.요일,희망수업시간:r.희망수업시간,등원장소:r.등원장소||'',학교하교시간:r.학교하교시간||'',등원방법:r.등원방법||'',하원장소:r.하원장소||'',하원방법:r.하원방법||'',메모:r.메모||''}));
   const wb=XLSX.utils.book_new(),ws=XLSX.utils.json_to_sheet(data);
-  ws['!cols']=[{wch:5},{wch:10},{wch:8},{wch:12},{wch:18},{wch:14},{wch:8},{wch:18},{wch:8},{wch:30}];
+  ws['!cols']=[{wch:5},{wch:10},{wch:7},{wch:8},{wch:12},{wch:18},{wch:14},{wch:8},{wch:18},{wch:8},{wch:30}];
   XLSX.utils.book_append_sheet(wb,ws,'차량신청');
   const t=new Date(),fn=`차량신청_${t.getFullYear()}${String(t.getMonth()+1).padStart(2,'0')}${String(t.getDate()).padStart(2,'0')}.xlsx`;
   XLSX.writeFile(wb,fn);toast('📊 엑셀 다운로드 완료','ok');
