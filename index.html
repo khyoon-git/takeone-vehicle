@@ -25,27 +25,16 @@ a{color:inherit;text-decoration:none;}
 
 /* ── HERO ── */
 .hero{
-  position:relative; overflow:hidden;
-  background:radial-gradient(1200px 500px at 70% -10%, #232c4d 0%, var(--navy2) 40%, var(--navy) 100%);
-  color:#fff; padding:56px 22px 44px;
+  position:relative; background:#fff; text-align:center;
+  padding:44px 22px 38px; border-bottom:1px solid var(--line);
 }
-.hero::before{
-  content:""; position:absolute; left:0; right:0; bottom:0; height:5px;
-  background:linear-gradient(90deg, var(--brand) 0%, var(--brand) 55%, var(--gold) 55%, var(--gold) 100%);
+.hero::after{
+  content:""; position:absolute; left:0; right:0; bottom:0; height:4px;
+  background:linear-gradient(90deg, var(--brand) 0%, var(--brand) 60%, var(--gold) 60%, var(--gold) 100%);
 }
 .hero-in{max-width:1000px; margin:0 auto;}
-.brand-mark{
-  display:inline-flex; align-items:center; gap:10px;
-  background:rgba(255,255,255,0.08); border:1px solid rgba(255,255,255,0.14);
-  padding:7px 14px; border-radius:999px; font-size:13px; font-weight:700; letter-spacing:.3px;
-  color:#E8EAF2; margin-bottom:20px;
-}
-.brand-mark .dot{width:8px;height:8px;border-radius:50%;background:var(--brand);}
-.hero h1{
-  margin:0; font-size:38px; font-weight:900; letter-spacing:-1px; line-height:1.1;
-}
-.hero h1 .accent{color:var(--gold);}
-.hero p{margin:14px 0 0; font-size:16px; color:#B9C0D4; line-height:1.6; max-width:520px;}
+.hero .logo{height:240px; width:auto; max-width:86%; display:block; margin:0 auto;}
+.hero .tagline{margin:22px 0 0; font-size:16px; color:var(--muted); font-weight:600;}
 
 /* ── MENU ── */
 .wrap{max-width:1000px; margin:0 auto; padding:28px 22px 60px;}
@@ -79,7 +68,7 @@ a.card:hover{transform:translateY(-3px); box-shadow:0 10px 26px rgba(17,24,39,.1
 
 @media(max-width:560px){
   .hero{padding:44px 18px 40px;}
-  .hero h1{font-size:30px;}
+  .hero .logo{height:168px;}
   .wrap{padding:24px 16px 48px;}
   .grid{grid-template-columns:1fr 1fr; gap:12px;}
   .card{padding:16px 14px;}
@@ -91,9 +80,8 @@ a.card:hover{transform:translateY(-3px); box-shadow:0 10px 26px rgba(17,24,39,.1
 
 <div class="hero">
   <div class="hero-in">
-    <div class="brand-mark"><span class="dot"></span>TAKE1 TAEKWONDO</div>
-    <h1>테이크원 <span class="accent">태권도</span></h1>
-    <p>아이들의 건강한 성장을 응원합니다. 아래 메뉴에서 원하시는 서비스를 선택하세요.</p>
+    <img class="logo" src="/logo.svg" alt="테이크원 태권도">
+    <p class="tagline">아이들의 건강한 성장을 응원합니다</p>
   </div>
 </div>
 
