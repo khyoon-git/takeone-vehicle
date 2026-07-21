@@ -101,6 +101,10 @@ tbody tr.grp-start td{border-top:2px solid #E2E8F0;}
 td.nm,td.num{vertical-align:top;}
 td.nm{background:#FCFCFF;}
 td.bld{vertical-align:top;background:#FCFCFF;font-weight:700;white-space:nowrap;color:#4338CA;}
+.bldsel{border:1.5px solid var(--line);border-radius:8px;padding:5px 6px;font-family:inherit;font-size:13px;font-weight:700;color:#4338CA;background:#fff;cursor:pointer;outline:none;}
+.bldsel:focus{border-color:#7C3AED;}
+.bldwrap{display:flex;flex-direction:column;gap:5px;align-items:stretch;}
+.bldsave{padding:4px 10px;font-size:12px;}
 .rbld{font-size:11px;font-weight:800;color:#7C3AED;background:#F3EEFF;padding:1px 6px;border-radius:999px;margin-left:4px;}
 .empty{text-align:center;padding:64px 20px;color:var(--muted);}
 .empty-ico{font-size:44px;margin-bottom:10px;}
@@ -279,6 +283,7 @@ td.bld{vertical-align:top;background:#FCFCFF;font-weight:700;white-space:nowrap;
 const DAYS=['월요일','화요일','수요일','목요일','금요일'];
 let adminKey=sessionStorage.getItem('to_admin_key')||'';
 let records=[];
+let viewGroups=[];
 
 /* ── API helper (관리자 키 헤더 포함) ── */
 async function api(path,{method='GET',body,auth=false}={}){
@@ -384,6 +389,7 @@ function renderAdminTable(){
   groups=groups.filter(g=>(!name||g.이름.toLowerCase().includes(name))&&(!bldg||(g.recs[0]||{}).관===bldg));
   if(day){groups=groups.map(g=>({이름:g.이름,pin:g.pin,recs:g.recs.filter(r=>r.요일===day)})).filter(g=>g.recs.length);}
   groups.sort((a,b)=>a.이름.localeCompare(b.이름,'ko'));
+  viewGroups=groups;
   const tb=document.getElementById('adminTbody'),em=document.getElementById('adminEmpty');
   document.getElementById('shown-count').textContent=groups.length;
   if(!groups.length){tb.innerHTML='';em.style.display='';return;}
@@ -403,13 +409,27 @@ function renderAdminTable(){
         +`<td class="memo">${escapeHtml(r.메모)||'-'}</td>`
         +`<td><button class="btn btn-red btn-sm" onclick="adminDel(${r.id},'${(r.이름||'').replace(/'/g,"\\'")}','${r.요일}')">삭제</button></td>`;
       if(j===0){
-        html+=`<tr class="grp-start"><td class="num" rowspan="${n}">${i+1}</td><td class="nm" rowspan="${n}">${escapeHtml(g.이름)}</td><td class="bld" rowspan="${n}">${escapeHtml((g.recs[0]||{}).관)||'-'}</td>${rest}</tr>`;
+        const b=escapeHtml((g.recs[0]||{}).관);
+        const bldSel=`<td class="bld" rowspan="${n}"><div class="bldwrap"><select class="bldsel" id="bldsel-${i}"><option value="" ${!b?'selected':''}>-</option>${['본관','별관','소양관'].map(x=>`<option ${b===x?'selected':''}>${x}</option>`).join('')}</select><button class="btn btn-blue btn-sm bldsave" onclick="saveBuilding(${i})">수정</button></div></td>`;
+        html+=`<tr class="grp-start"><td class="num" rowspan="${n}">${i+1}</td><td class="nm" rowspan="${n}">${escapeHtml(g.이름)}</td>${bldSel}${rest}</tr>`;
       }else{
         html+=`<tr>${rest}</tr>`;
       }
     });
   });
   tb.innerHTML=html;
+}
+async function saveBuilding(idx){
+  const g=viewGroups[idx];if(!g)return;
+  const sel=document.getElementById('bldsel-'+idx);if(!sel)return;
+  const val=sel.value;
+  const ids=g.recs.map(r=>r.id);
+  try{
+    await api('/api/admin-update',{method:'POST',auth:true,body:{building:val,ids}});
+    g.recs.forEach(gr=>{const rec=records.find(x=>x.id===gr.id);if(rec)rec.관=val;});
+    toast('관이 수정되었습니다','ok');renderAdminTable();
+    if(currentView==='route')renderRouteView();
+  }catch(e){if(e.status===401){adminLogout();}else{toast('⚠️ '+e.message);loadRecords();}}
 }
 async function adminDel(id,name,day){
   if(!await uiConfirm(`<strong>${escapeHtml(name)}</strong> / ${day}<br>삭제할까요?`,'삭제하기'))return;
