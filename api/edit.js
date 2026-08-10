@@ -1,6 +1,6 @@
 // POST /api/edit  { name, pin, days:[...] }
 // 해당 이름+PIN의 기존 신청을 모두 지우고 새 내용으로 교체 (공개, 본인 PIN 확인)
-import { db, readBody, clip } from './_db.js';
+import { db, readBody, clip, getSettings, computeOpen } from './_db.js';
 
 export default async function handler(req, res) {
   if (req.method !== 'POST') {
@@ -9,6 +9,8 @@ export default async function handler(req, res) {
   }
   const sql = db();
   try {
+    const st = await getSettings(sql);
+    if (!computeOpen(st)) return res.status(403).json({ error: '현재 차량 신청 기간이 아닙니다.' });
     const body = await readBody(req);
     const name = String(body.name || '').trim();
     const pin = String(body.pin || '').trim();

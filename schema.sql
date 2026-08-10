@@ -22,3 +22,9 @@ CREATE UNIQUE INDEX IF NOT EXISTS records_name_day_uidx ON records (name, day);
 
 -- 조회 속도용 인덱스
 CREATE INDEX IF NOT EXISTS records_name_pin_idx ON records (name, pin);
+
+-- 신청 기간(열기/닫기) 설정 저장용
+CREATE TABLE IF NOT EXISTS settings (
+  key   TEXT PRIMARY KEY,
+  value TEXT NOT NULL DEFAULT ''
+);

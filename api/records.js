@@ -1,6 +1,6 @@
 // GET  /api/records  -> 전체 신청 목록 (관리자 전용)
 // POST /api/records  -> 신청 등록 (공개). 같은 이름+요일은 새 내용으로 덮어씀.
-import { db, isAdmin, readBody, toRecord, clip } from './_db.js';
+import { db, isAdmin, readBody, toRecord, clip, getSettings, computeOpen } from './_db.js';
 
 export default async function handler(req, res) {
   const sql = db();
@@ -12,6 +12,8 @@ export default async function handler(req, res) {
     }
 
     if (req.method === 'POST') {
+      const st = await getSettings(sql);
+      if (!computeOpen(st)) return res.status(403).json({ error: '현재 차량 신청 기간이 아닙니다.' });
       const body = await readBody(req);
       const name = String(body.name || '').trim();
       const pin = String(body.pin || '').trim();

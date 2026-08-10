@@ -162,6 +162,19 @@ td.bld{vertical-align:top;background:#FCFCFF;font-weight:700;white-space:nowrap;
   .topbar-in,.container{padding-left:14px;padding-right:14px;}
   .brand{font-size:15px;}
 }
+
+/* 신청 접수 설정 패널 */
+.setbar{background:#fff;border:1px solid var(--line);border-radius:14px;padding:16px 18px;margin-bottom:18px;}
+.setbar-h{display:flex;align-items:center;justify-content:space-between;font-weight:800;font-size:15px;margin-bottom:12px;}
+.statuspill{font-size:12px;font-weight:800;padding:4px 12px;border-radius:999px;background:#EEF0F4;color:#64748B;}
+.statuspill.open{background:#DCFCE7;color:#15803D;}
+.statuspill.closed{background:#FEE2E2;color:#B91C1C;}
+.setrow{display:flex;flex-wrap:wrap;gap:14px;align-items:flex-end;margin-bottom:10px;}
+.setrow label{font-size:13px;color:#475569;font-weight:600;display:flex;flex-direction:column;gap:4px;}
+.setrow label.chk{flex-direction:row;align-items:center;gap:8px;font-size:14px;color:#0F172A;font-weight:700;}
+.setrow label.chk input{width:18px;height:18px;}
+.dtin{border:1.5px solid var(--line);border-radius:8px;padding:8px 10px;font-family:inherit;font-size:14px;color:var(--ink);}
+.sethint{font-size:12px;color:var(--muted);}
 </style>
 </head>
 <body>
@@ -200,6 +213,17 @@ td.bld{vertical-align:top;background:#FCFCFF;font-weight:700;white-space:nowrap;
   </div>
 
   <div class="container">
+    <div class="setbar">
+      <div class="setbar-h"><span>🚦 차량 신청 접수</span><span class="statuspill" id="statuspill">확인 중…</span></div>
+      <div class="setrow"><label class="chk"><input type="checkbox" id="setEnabled"> 신청 받기</label></div>
+      <div class="setrow">
+        <label>시작 일시<input type="datetime-local" id="setStart" class="dtin"></label>
+        <label>마감 일시<input type="datetime-local" id="setEnd" class="dtin"></label>
+        <button class="btn btn-purple btn-sm" onclick="saveSettings()">설정 저장</button>
+      </div>
+      <div class="setrow"><span class="sethint">· 기간을 비워두면 &lsquo;신청 받기&rsquo;가 켜져 있는 동안 항상 열립니다.<br>· 시작/마감 일시를 넣으면 그 기간에만 자동으로 열립니다. (한국 시간 기준)</span></div>
+    </div>
+
     <div class="summary">
       <div class="stat accent"><div class="k">전체 신청</div><div class="v" id="sum-total">0</div></div>
       <div class="stat"><div class="k">학생 수</div><div class="v" id="sum-students">0</div></div>
@@ -321,7 +345,7 @@ async function loadRecords(){
   try{
     const r=await api('/api/records',{auth:true});
     records=r.records||[];
-    updateLbl();renderSummary();renderAdminTable();
+    updateLbl();renderSummary();renderAdminTable();loadSettings();
     if(currentView==='route')renderRouteView();
   }catch(e){
     if(e.status===401){adminLogout();showE(document.getElementById('err-admin-login'),'다시 로그인해 주세요');}
@@ -333,6 +357,29 @@ function renderSummary(){
   document.getElementById('sum-total').textContent=records.length;
   document.getElementById('sum-students').textContent=new Set(records.map(r=>r.이름)).size;
   DAYS.forEach((d,idx)=>{const el=document.getElementById('sum-'+idx);if(el)el.textContent=records.filter(r=>r.요일===d).length;});
+}
+function msToLocalInput(ms){if(!ms)return '';const d=new Date(ms+9*3600*1000);return d.toISOString().slice(0,16);}
+function localInputToMs(v){if(!v)return '';const t=Date.parse(v+':00+09:00');return isNaN(t)?'':t;}
+async function loadSettings(){
+  try{
+    const r=await api('/api/status');
+    document.getElementById('setEnabled').checked = r.enabled!==false;
+    document.getElementById('setStart').value = msToLocalInput(r.start);
+    document.getElementById('setEnd').value = msToLocalInput(r.end);
+    const pill=document.getElementById('statuspill');
+    pill.textContent = r.open ? '🟢 신청 열림' : '🔴 신청 닫힘';
+    pill.className='statuspill '+(r.open?'open':'closed');
+  }catch(e){}
+}
+async function saveSettings(){
+  const enabled=document.getElementById('setEnabled').checked;
+  const start=localInputToMs(document.getElementById('setStart').value);
+  const end=localInputToMs(document.getElementById('setEnd').value);
+  if(start&&end&&Number(end)<Number(start))return toast('마감 일시가 시작보다 빠릅니다');
+  try{
+    await api('/api/settings',{method:'POST',auth:true,body:{enabled,start,end}});
+    toast('설정이 저장되었습니다','ok');loadSettings();
+  }catch(e){if(e.status===401){adminLogout();}else toast('⚠️ '+e.message);}
 }
 
 /* ── 뷰 전환 (명단 / 차량 노선) ── */

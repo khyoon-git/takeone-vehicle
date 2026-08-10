@@ -49,3 +49,29 @@ export function toRecord(r) {
     메모: r.memo || '',
   };
 }
+
+// ── 신청 기간 설정 ──
+// settings 테이블(key/value)에서 설정을 읽어옵니다. 테이블이 없으면 기본값(항상 열림).
+export async function getSettings(sqlc) {
+  try {
+    const rows = await sqlc`SELECT key, value FROM settings`;
+    const m = {};
+    rows.forEach((r) => { m[r.key] = r.value; });
+    return {
+      enabled: m.enabled == null ? true : m.enabled === '1',
+      start: m.start_ms ? Number(m.start_ms) : null,
+      end: m.end_ms ? Number(m.end_ms) : null,
+    };
+  } catch {
+    return { enabled: true, start: null, end: null };
+  }
+}
+
+// 현재 신청이 열려 있는지 계산 (start/end 는 epoch ms, KST 기준으로 클라이언트가 변환해 저장)
+export function computeOpen(st) {
+  const now = Date.now();
+  if (!st.enabled) return false;
+  if (st.start && now < st.start) return false;
+  if (st.end && now > st.end) return false;
+  return true;
+}

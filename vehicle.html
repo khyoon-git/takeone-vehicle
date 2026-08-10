@@ -511,6 +511,20 @@ details[open]>summary{color:#5856D6;}
 .toast.show{transform:translateX(-50%) translateY(0);}
 .toast.ok{background:rgba(52,199,89,0.92);}
 .toast.warn{background:rgba(255,149,0,0.92);}
+
+/* 신청 기간 배너 & 안내문 */
+.closed-banner{background:#FFECEC;border:1px solid #F3B4B4;color:#B0121F;font-weight:700;border-radius:12px;padding:14px 16px;margin:0 16px 12px;font-size:14px;text-align:center;line-height:1.5;}
+.notice-card{background:#FFFDF3;border:1px solid rgba(180,140,0,.22);border-radius:14px;margin:0 16px 14px;overflow:hidden;}
+.notice-card>summary{list-style:none;cursor:pointer;padding:14px 16px;font-size:14.5px;font-weight:800;color:#8a6d00;display:flex;align-items:center;justify-content:space-between;gap:8px;}
+.notice-card>summary::-webkit-details-marker{display:none;}
+.notice-card>summary .chev{transition:transform .2s;font-size:12px;color:#b08900;}
+.notice-card[open]>summary .chev{transform:rotate(180deg);}
+.notice-body{padding:0 16px 16px;color:#4a3d13;font-size:13.5px;line-height:1.7;}
+.notice-body p{margin:0 0 9px;}
+.notice-body .nh{font-weight:800;color:#8a1f1f;margin:13px 0 5px;font-size:14px;}
+.notice-body .ni{margin:0 0 7px;}
+.notice-body .sub{padding-left:10px;color:#5a4a15;margin:0 0 7px;}
+.notice-body .hl{background:#FFEFA8;border-radius:6px;padding:1px 6px;}
 </style>
 </head>
 <body>
@@ -540,6 +554,7 @@ details[open]>summary{color:#5856D6;}
   <div class="scr" id="main-scr">
     <!-- 신청하기 탭 -->
     <div id="tab-form" class="wrap">
+      <div id="closed-banner" class="closed-banner" style="display:none;"></div>
       <p class="sh">① 학생 정보</p>
       <div class="gcard">
         <div class="ifield">
@@ -570,6 +585,27 @@ details[open]>summary{color:#5856D6;}
         </div>
         <div class="chips" id="chips"></div>
       </div>
+
+      <details class="notice-card" open>
+        <summary>📢 2학기 등·하원 시간표 조사 안내 <span class="chev">▾</span></summary>
+        <div class="notice-body">
+          <p>안녕하세요. 테이크원 태권도입니다. 😊</p>
+          <p>2학기 동안 더욱 원활한 차량 운행 및 수업 운영을 위해 수련생들의 요일별 등·하원 시간, 장소 및 방법을 조사합니다.</p>
+          <p>🥋 태권도 수련 시간은 기존과 동일하게 운영됩니다.</p>
+          <p>아래에서 수련생 이름과 비밀번호(4자리)를 입력하여 요일별 등·하원 정보를 작성해 주세요.</p>
+          <p class="nh">📌 작성 시 참고사항</p>
+          <p class="ni"><b>① 초등학생 수련생</b><br>요일별 하교 시간이 다르기 때문에 각 요일의 하교 시간과 수업 시간을 확인하여 작성해 주세요.</p>
+          <p class="ni"><b>② 유치원·어린이집 수련생</b><br>별도의 하교 시간 조사가 필요한 경우가 아니라면 현재 수련 중인 기존 수업 시간을 기준으로 작성해 주세요.</p>
+          <p class="sub">· 기존 4부 수련생 → 4부<br>· 기존 5부 수련생 → 5부</p>
+          <p class="ni"><b>③ 5부 → 4부 변경을 희망하는 경우</b><br>현재 4부는 정원 마감으로 바로 변경이 어렵습니다. 4부로 변경을 희망하시는 경우 대기 명단에 등록되며, 자리가 생기는 순서에 따라 변경해 드릴 예정입니다.</p>
+          <p>추가로 전달하실 사항이나 차량 운행과 관련된 요청사항이 있으시면 메모란에 작성해 주세요.</p>
+          <p class="nh">📅 조사 기간 — <span class="hl">8월 14일(금)까지</span></p>
+          <p>※ 조사 기간 내에는 &lsquo;조회·수정&rsquo; 메뉴에서 이름과 비밀번호(4자리)를 입력하면 언제든지 수정하실 수 있습니다.</p>
+          <p>※ 차량 운행은 작성해 주신 내용을 최대한 반영하여 편성할 예정입니다. 다만 기존 운행 동선·시간 및 아이들의 안전을 종합적으로 고려하여 최종 편성되므로, 요청하신 내용이 모두 반영되지 않을 수 있습니다.</p>
+          <p>※ 운행 동선·시간에 따라 일부 장소는 차량 운행이 어려울 수 있는 점 미리 양해 부탁드립니다.</p>
+          <p>원활한 2학기 수업 및 차량 운행을 위해 기간 내 꼭 작성 부탁드립니다.<br>감사합니다. 😊<br><b>테이크원 태권도</b></p>
+        </div>
+      </details>
 
       <div id="building-sec" style="display:none;">
         <p class="sh">② 관 선택</p>
@@ -887,7 +923,22 @@ function buildPayloadDays(state){
 }
 
 /* ── SUBMIT (검토 → 서버 저장) ── */
+let submissionsOpen=true;
+function fmtKST(ms){const d=new Date(ms+9*3600*1000);const mm=d.getUTCMonth()+1,dd=d.getUTCDate(),hh=String(d.getUTCHours()).padStart(2,'0'),mi=String(d.getUTCMinutes()).padStart(2,'0');return mm+'월 '+dd+'일 '+hh+':'+mi;}
+async function loadStatus(){
+  try{
+    const r=await api('/api/status');
+    submissionsOpen=!!r.open;
+    const banner=document.getElementById('closed-banner');
+    if(banner){
+      if(submissionsOpen){banner.style.display='none';}
+      else{banner.textContent='🚫 현재 차량 신청 접수 기간이 아닙니다.'+(r.end?' (마감 '+fmtKST(r.end)+')':''); banner.style.display='';}
+    }
+  }catch{submissionsOpen=true;}
+}
+loadStatus();
 function submitAll(){
+  if(!submissionsOpen)return toast('현재 차량 신청 접수 기간이 아닙니다.');
   const s=cur();if(!s)return toast('학생을 선택해 주세요');
   if(!buildingSt[s.name])return toast('관을 선택해 주세요');
   const days=selDays[s.name]||[];if(!days.length)return toast('요일을 선택해 주세요');
