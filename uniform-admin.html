@@ -211,10 +211,10 @@ function logout(){adminKey='';sessionStorage.removeItem('to_admin_key');showPage
 
 async function loadAll(){
   try{
-    const st=await api('/api/uniform-status');
+    const st=await api('/api/uniform?action=status');
     SIZES=Array.isArray(st.sizes)?st.sizes:[]; ENABLED=!!st.open;
     renderStatus();renderSizeChips();
-    const r=await api('/api/uniform',{auth:true});
+    const r=await api('/api/uniform?action=list',{auth:true});
     orders=r.orders||[];
     renderSummary();renderTable();
   }catch(e){ if(e.status===401){logout();showE('err-login','다시 로그인해 주세요');} else toast('⚠️ '+e.message); }
@@ -225,7 +225,7 @@ function renderStatus(){
   p.className='statuspill '+(ENABLED?'open':'closed');
 }
 async function setEnabled(v){
-  try{ await api('/api/uniform-settings',{method:'POST',auth:true,body:{enabled:v}}); ENABLED=v; renderStatus(); toast(v?'신청을 시작했습니다':'신청을 마감했습니다','ok'); }
+  try{ await api('/api/uniform',{method:'POST',auth:true,body:{action:'settings',enabled:v}}); ENABLED=v; renderStatus(); toast(v?'신청을 시작했습니다':'신청을 마감했습니다','ok'); }
   catch(e){ if(e.status===401){logout();}else toast('⚠️ '+e.message); }
 }
 function renderSizeChips(){
@@ -234,7 +234,7 @@ function renderSizeChips(){
     : '<span class="sizechip empty">등록된 사이즈가 없습니다. 아래에서 추가해 주세요.</span>';
 }
 async function saveSizes(){
-  try{ await api('/api/uniform-settings',{method:'POST',auth:true,body:{sizes:SIZES}}); }
+  try{ await api('/api/uniform',{method:'POST',auth:true,body:{action:'settings',sizes:SIZES}}); }
   catch(e){ if(e.status===401){logout();}else toast('⚠️ '+e.message); }
 }
 async function addSize(){
@@ -287,23 +287,23 @@ function renderTable(){
 async function saveRow(id){
   const size=document.getElementById('ts-'+id).value;
   const qty=parseInt(document.getElementById('tq-'+id).value,10)||1;
-  try{ await api('/api/uniform-admin',{method:'POST',auth:true,body:{mode:'edit',id,size,qty}}); const o=orders.find(x=>x.id===id); if(o){o.사이즈=size;o.수량=qty;} renderSummary(); toast('수정되었습니다','ok'); }
+  try{ await api('/api/uniform',{method:'POST',auth:true,body:{action:'admin',mode:'edit',id,size,qty}}); const o=orders.find(x=>x.id===id); if(o){o.사이즈=size;o.수량=qty;} renderSummary(); toast('수정되었습니다','ok'); }
   catch(e){ if(e.status===401){logout();}else toast('⚠️ '+e.message); }
 }
 async function togglePaid(id,v){
-  try{ await api('/api/uniform-admin',{method:'POST',auth:true,body:{mode:'paid',id,paid:v}}); const o=orders.find(x=>x.id===id); if(o)o.입금확인=v; renderSummary(); }
+  try{ await api('/api/uniform',{method:'POST',auth:true,body:{action:'admin',mode:'paid',id,paid:v}}); const o=orders.find(x=>x.id===id); if(o)o.입금확인=v; renderSummary(); }
   catch(e){ if(e.status===401){logout();}else toast('⚠️ '+e.message); }
 }
 async function delRow(id,name){
   if(!confirm(name+' 님의 이 신청을 삭제할까요?'))return;
-  try{ await api('/api/uniform-admin',{method:'POST',auth:true,body:{mode:'delete',id}}); orders=orders.filter(x=>x.id!==id); renderSummary();renderTable(); toast('삭제되었습니다'); }
+  try{ await api('/api/uniform',{method:'POST',auth:true,body:{action:'admin',mode:'delete',id}}); orders=orders.filter(x=>x.id!==id); renderSummary();renderTable(); toast('삭제되었습니다'); }
   catch(e){ if(e.status===401){logout();}else toast('⚠️ '+e.message); }
 }
 function openDel(){document.getElementById('modal-del').classList.add('open');}
 function closeDel(){document.getElementById('modal-del').classList.remove('open');}
 async function deleteAll(){
   closeDel();
-  try{ await api('/api/uniform-admin',{method:'POST',auth:true,body:{mode:'delete-all'}}); orders=[]; renderSummary();renderTable(); toast('전체 삭제 완료'); }
+  try{ await api('/api/uniform',{method:'POST',auth:true,body:{action:'admin',mode:'delete-all'}}); orders=[]; renderSummary();renderTable(); toast('전체 삭제 완료'); }
   catch(e){ if(e.status===401){logout();}else toast('⚠️ '+e.message); }
 }
 function exportExcel(){

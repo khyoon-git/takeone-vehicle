@@ -206,7 +206,7 @@ function bumpQty(d){qty=Math.max(1,Math.min(99,qty+d));document.getElementById('
 
 async function loadStatus(){
   try{
-    const r=await api('/api/uniform-status');
+    const r=await api('/api/uniform?action=status');
     OPEN=!!r.open; SIZES=Array.isArray(r.sizes)?r.sizes:[];
     const banner=document.getElementById('closed-banner');
     if(OPEN){banner.style.display='none';}
@@ -230,7 +230,7 @@ async function submitOrder(){
   if(!/^\d{4}$/.test(pin))return showE('err-form','PIN을 숫자 4자리로 입력해 주세요');
   const btn=document.getElementById('submitBtn');btn.disabled=true;btn.textContent='제출 중…';
   try{
-    await api('/api/uniform',{method:'POST',body:{name,grade,building:selBldg,size:selSize,qty,depositor,pin}});
+    await api('/api/uniform',{method:'POST',body:{action:'create',name,grade,building:selBldg,size:selSize,qty,depositor,pin}});
     document.getElementById('modal-done').classList.add('open');
     // reset (이름/PIN/입금자명은 유지하면 추가 신청 편함)
     selSize='';qty=1;document.getElementById('f-qty').textContent='1';renderSizes();
@@ -247,7 +247,7 @@ async function lookup(){
   if(!pin)return showE('err-lookup','PIN을 입력해 주세요');
   const btn=document.getElementById('lookupBtn');btn.disabled=true;btn.textContent='조회 중…';
   try{
-    const r=await api('/api/uniform-lookup',{method:'POST',body:{name,pin}});
+    const r=await api('/api/uniform',{method:'POST',body:{action:'lookup',name,pin}});
     lookupRows=r.orders||[];
     renderLookup(name,pin);
   }catch(e){showE('err-lookup',e.message);}
@@ -284,7 +284,7 @@ async function saveLookup(i,encName,pin){
   const size=document.getElementById('ls-'+i).value;
   const q=parseInt(document.getElementById('lq-'+i).textContent,10)||1;
   try{
-    await api('/api/uniform-edit',{method:'POST',body:{name,pin,id:o.id,size,qty:q}});
+    await api('/api/uniform',{method:'POST',body:{action:'edit',name,pin,id:o.id,size,qty:q}});
     toast('수정되었습니다','ok');lookup();
   }catch(e){toast('⚠️ '+e.message);}
 }
@@ -293,7 +293,7 @@ async function cancelLookup(i,encName,pin){
   const name=decodeURIComponent(encName);
   const o=lookupRows[i];
   try{
-    await api('/api/uniform-edit',{method:'POST',body:{name,pin,id:o.id,mode:'delete'}});
+    await api('/api/uniform',{method:'POST',body:{action:'edit',name,pin,id:o.id,mode:'delete'}});
     toast('신청이 취소되었습니다');lookup();
   }catch(e){toast('⚠️ '+e.message);}
 }
