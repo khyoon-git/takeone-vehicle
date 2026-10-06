@@ -1,0 +1,221 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="robots" content="noindex, nofollow">
+<link rel="icon" href="/favicon.svg" type="image/svg+xml">
+<title>공지사항 관리 · 테이크원 태권도</title>
+<style>
+:root{--purple:#7C3AED;--blue:#2563EB;--bg:#F1F5F9;--line:#E2E8F0;--ink:#0F172A;--muted:#64748B;--red:#EF4444;--green:#16A34A;}
+*{box-sizing:border-box;}
+html,body{margin:0;padding:0;}
+body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI','Apple SD Gothic Neo','Malgun Gothic',sans-serif;background:var(--bg);color:var(--ink);-webkit-font-smoothing:antialiased;}
+a{text-decoration:none;color:inherit;}
+.page{display:none;} .page.active{display:block;}
+.login-page.active{display:flex;min-height:100vh;align-items:center;justify-content:center;padding:24px;}
+.login-card{background:#fff;width:100%;max-width:400px;border-radius:16px;box-shadow:0 10px 40px rgba(15,23,42,.12);padding:36px 32px;}
+.login-icon{font-size:44px;text-align:center;}
+.login-title{font-size:22px;font-weight:800;text-align:center;margin:12px 0 4px;}
+.login-sub{font-size:14px;color:var(--muted);text-align:center;margin-bottom:24px;}
+label.fl{display:block;font-size:13px;font-weight:700;color:var(--muted);margin-bottom:6px;}
+.row{display:flex;gap:8px;}
+.input,.sel,.area{width:100%;border:1.5px solid var(--line);border-radius:10px;padding:11px 13px;font-size:15px;font-family:inherit;outline:none;color:var(--ink);background:#fff;}
+.input:focus,.sel:focus,.area:focus{border-color:var(--purple);}
+.area{min-height:200px;resize:vertical;line-height:1.6;}
+.emsg{color:var(--red);font-size:13px;display:none;margin:8px 0 2px;} .emsg.show{display:block;}
+.eye{border:1.5px solid var(--line);border-radius:10px;background:#fff;padding:0 12px;cursor:pointer;font-size:16px;flex-shrink:0;}
+.btn{border:none;border-radius:10px;font-family:inherit;font-weight:700;cursor:pointer;display:inline-flex;align-items:center;justify-content:center;gap:6px;padding:10px 15px;font-size:14px;}
+.btn:hover{filter:brightness(.97);}
+.btn-full{width:100%;padding:13px;font-size:15px;}
+.btn-sm{padding:7px 12px;font-size:13px;border-radius:8px;}
+.btn-purple{background:var(--purple);color:#fff;} .btn-blue{background:var(--blue);color:#fff;}
+.btn-red{background:var(--red);color:#fff;} .btn-gray{background:#E2E8F0;color:#0F172A;} .btn-ghost{background:#fff;color:#334155;border:1.5px solid var(--line);}
+.topbar{background:#fff;border-bottom:1px solid var(--line);}
+.topbar-in{max-width:1000px;margin:0 auto;padding:13px 22px;display:flex;align-items:center;gap:10px;}
+.brand{font-size:17px;font-weight:800;display:flex;align-items:center;gap:10px;}
+.brand .pill{background:var(--purple);color:#fff;font-size:12px;font-weight:800;padding:4px 11px;border-radius:999px;}
+.spacer{flex:1;}
+.wrap{max-width:1000px;margin:0 auto;padding:22px;display:grid;grid-template-columns:1fr 1.2fr;gap:18px;align-items:start;}
+@media(max-width:760px){.wrap{grid-template-columns:1fr;}}
+.card{background:#fff;border:1px solid var(--line);border-radius:14px;padding:18px;}
+.card h2{margin:0 0 14px;font-size:15px;font-weight:800;}
+.field{margin-bottom:12px;}
+.chkrow{display:flex;align-items:center;gap:8px;font-size:14px;font-weight:700;margin:4px 0 12px;}
+.chkrow input{width:18px;height:18px;}
+.plist{display:flex;flex-direction:column;gap:10px;max-height:70vh;overflow:auto;}
+.prow{border:1px solid var(--line);border-radius:12px;padding:12px 14px;}
+.prow .pt{display:flex;align-items:center;gap:7px;margin-bottom:5px;flex-wrap:wrap;}
+.cat{font-size:11px;font-weight:800;padding:2px 8px;border-radius:999px;background:#F3EEFF;color:var(--purple);}
+.pin{font-size:11px;font-weight:800;color:#B45309;}
+.prow .ttl{font-weight:700;font-size:15px;}
+.prow .dt{font-size:12px;color:var(--muted);margin-top:3px;}
+.prow .act{display:flex;gap:7px;margin-top:10px;}
+.empty{text-align:center;padding:40px 10px;color:var(--muted);}
+.toast{position:fixed;bottom:30px;left:50%;transform:translateX(-50%) translateY(120px);background:rgba(15,23,42,.92);color:#fff;padding:12px 22px;border-radius:24px;font-size:14px;font-weight:600;transition:transform .28s;z-index:200;}
+.toast.show{transform:translateX(-50%) translateY(0);} .toast.ok{background:rgba(22,163,74,.95);}
+.editing-note{font-size:12.5px;color:var(--purple);font-weight:700;margin-bottom:10px;display:none;}
+.editing-note.show{display:block;}
+</style>
+</head>
+<body>
+
+<div class="page login-page active" id="page-login">
+  <div class="login-card">
+    <div class="login-icon">📢</div>
+    <div class="login-title">공지사항 관리</div>
+    <div class="login-sub">공지 글을 작성·수정·삭제합니다</div>
+    <label class="fl">비밀번호</label>
+    <div class="row"><input class="input" type="password" id="pw" onkeydown="if(event.key==='Enter')login()"><button class="eye" onclick="eye('pw')">👁</button></div>
+    <div class="emsg" id="err-login">비밀번호가 올바르지 않습니다</div>
+    <button class="btn btn-purple btn-full" id="loginBtn" onclick="login()" style="margin-top:14px;">로그인</button>
+    <div style="text-align:center;margin-top:14px;"><a href="/admin" style="color:var(--muted);font-size:13px;">← 관리 홈</a></div>
+  </div>
+</div>
+
+<div class="page" id="page-admin">
+  <div class="topbar"><div class="topbar-in">
+    <div class="brand"><span class="pill">📢 테이크원</span> 공지사항 관리</div>
+    <span class="spacer"></span>
+    <a class="btn btn-ghost" href="/notice" target="_blank">공지 보기 ↗</a>
+    <a class="btn btn-ghost" href="/admin">← 관리 홈</a>
+    <button class="btn btn-ghost" onclick="logout()">로그아웃</button>
+  </div></div>
+
+  <div class="wrap">
+    <!-- 작성/수정 폼 -->
+    <div class="card">
+      <h2 id="formTitle">✏️ 새 공지 작성</h2>
+      <div class="editing-note" id="editNote">수정 중입니다. 취소하려면 아래 ‘새 글로’를 누르세요.</div>
+      <div class="field">
+        <label class="fl">카테고리</label>
+        <select class="sel" id="f-cat">
+          <option>공지</option><option>수업</option><option>차량</option><option>행사</option><option>대회</option><option>특강</option><option>기타</option>
+        </select>
+      </div>
+      <div class="field">
+        <label class="fl">제목</label>
+        <input class="input" id="f-title" maxlength="100" placeholder="공지 제목">
+      </div>
+      <div class="field">
+        <label class="fl">내용</label>
+        <textarea class="area" id="f-body" maxlength="5000" placeholder="공지 내용을 입력하세요. 줄바꿈이 그대로 표시됩니다."></textarea>
+      </div>
+      <label class="chkrow"><input type="checkbox" id="f-pin"> 📌 상단 고정</label>
+      <div class="emsg" id="err-form"></div>
+      <div class="row">
+        <button class="btn btn-purple btn-full" id="saveBtn" onclick="save()">등록</button>
+        <button class="btn btn-gray btn-sm" id="newBtn" onclick="newPost()" style="display:none;">새 글로</button>
+      </div>
+    </div>
+
+    <!-- 목록 -->
+    <div class="card">
+      <h2>📋 공지 목록 (<span id="count">0</span>)</h2>
+      <div class="plist" id="plist"></div>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+let adminKey=sessionStorage.getItem('to_admin_key')||'';
+let posts=[], editingId=0;
+function eye(id){const el=document.getElementById(id);el.type=el.type==='password'?'text':'password';}
+function showPage(id){document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));document.getElementById('page-'+id).classList.add('active');}
+function esc(s){return String(s==null?'':s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');}
+function fmt(s){if(!s)return'';const d=new Date(s);if(isNaN(d))return'';return d.getFullYear()+'.'+String(d.getMonth()+1).padStart(2,'0')+'.'+String(d.getDate()).padStart(2,'0');}
+let _tt;function toast(m,t=''){const el=document.getElementById('toast');el.textContent=m;el.className='toast show'+(t?' '+t:'');clearTimeout(_tt);_tt=setTimeout(()=>el.className='toast',2600);}
+
+async function api(path,{method='GET',body,auth=false}={}){
+  const headers={}; if(body)headers['Content-Type']='application/json'; if(auth&&adminKey)headers['x-admin-key']=adminKey;
+  const res=await fetch(path,{method,headers,body:body?JSON.stringify(body):undefined});
+  let d={}; try{d=await res.json();}catch{}
+  if(!res.ok){const e=new Error(d.error||('요청 실패('+res.status+')'));e.status=res.status;throw e;}
+  return d;
+}
+
+async function login(){
+  const pw=document.getElementById('pw').value;
+  if(!pw){document.getElementById('err-login').classList.add('show');return;}
+  const b=document.getElementById('loginBtn');b.disabled=true;b.textContent='확인 중…';
+  try{
+    await api('/api/login',{method:'POST',body:{password:pw}});
+    adminKey=pw;sessionStorage.setItem('to_admin_key',pw);
+    document.getElementById('pw').value='';document.getElementById('err-login').classList.remove('show');
+    showPage('admin');load();
+  }catch(e){document.getElementById('err-login').classList.add('show');}
+  finally{b.disabled=false;b.textContent='로그인';}
+}
+function logout(){adminKey='';sessionStorage.removeItem('to_admin_key');showPage('login');}
+
+async function load(){
+  try{ const r=await api('/api/posts?board=notice'); posts=r.posts||[]; render(); }
+  catch(e){ if(e.status===401){logout();}else toast('⚠️ '+e.message); }
+}
+function render(){
+  document.getElementById('count').textContent=posts.length;
+  const box=document.getElementById('plist');
+  if(!posts.length){box.innerHTML='<div class="empty">아직 공지가 없습니다.</div>';return;}
+  box.innerHTML=posts.map(p=>`
+    <div class="prow">
+      <div class="pt">${p.상단고정?'<span class="pin">📌 고정</span>':''}<span class="cat">${esc(p.카테고리)}</span></div>
+      <div class="ttl">${esc(p.제목)}</div>
+      <div class="dt">${fmt(p.작성일)}</div>
+      <div class="act">
+        <button class="btn btn-blue btn-sm" onclick="edit(${p.id})">수정</button>
+        <button class="btn btn-red btn-sm" onclick="del(${p.id})">삭제</button>
+      </div>
+    </div>`).join('');
+}
+function newPost(){
+  editingId=0;
+  document.getElementById('formTitle').textContent='✏️ 새 공지 작성';
+  document.getElementById('editNote').classList.remove('show');
+  document.getElementById('newBtn').style.display='none';
+  document.getElementById('saveBtn').textContent='등록';
+  document.getElementById('f-cat').value='공지';
+  document.getElementById('f-title').value='';
+  document.getElementById('f-body').value='';
+  document.getElementById('f-pin').checked=false;
+}
+function edit(id){
+  const p=posts.find(x=>x.id===id);if(!p)return;
+  editingId=id;
+  document.getElementById('formTitle').textContent='✏️ 공지 수정';
+  document.getElementById('editNote').classList.add('show');
+  document.getElementById('newBtn').style.display='';
+  document.getElementById('saveBtn').textContent='수정 저장';
+  document.getElementById('f-cat').value=p.카테고리||'공지';
+  document.getElementById('f-title').value=p.제목||'';
+  document.getElementById('f-body').value=p.본문||'';
+  document.getElementById('f-pin').checked=!!p.상단고정;
+  window.scrollTo({top:0,behavior:'smooth'});
+}
+async function save(){
+  const category=document.getElementById('f-cat').value;
+  const title=document.getElementById('f-title').value.trim();
+  const body=document.getElementById('f-body').value;
+  const pinned=document.getElementById('f-pin').checked;
+  const err=document.getElementById('err-form');err.classList.remove('show');
+  if(!title){err.textContent='제목을 입력해 주세요';err.classList.add('show');return;}
+  const btn=document.getElementById('saveBtn');btn.disabled=true;
+  try{
+    if(editingId){ await api('/api/posts',{method:'POST',auth:true,body:{action:'update',id:editingId,category,title,body,pinned}}); toast('수정되었습니다','ok'); }
+    else{ await api('/api/posts',{method:'POST',auth:true,body:{action:'create',board:'notice',category,title,body,pinned}}); toast('등록되었습니다','ok'); }
+    newPost(); await load();
+  }catch(e){ if(e.status===401){logout();}else{err.textContent='⚠️ '+e.message;err.classList.add('show');} }
+  finally{btn.disabled=false;}
+}
+async function del(id){
+  const p=posts.find(x=>x.id===id);
+  if(!confirm('이 공지를 삭제할까요?\n\n'+(p?p.제목:'')))return;
+  try{ await api('/api/posts',{method:'POST',auth:true,body:{action:'delete',id}}); if(editingId===id)newPost(); await load(); toast('삭제되었습니다'); }
+  catch(e){ if(e.status===401){logout();}else toast('⚠️ '+e.message); }
+}
+
+(async()=>{ if(adminKey){ try{ await api('/api/login',{method:'POST',body:{password:adminKey}}); showPage('admin'); load(); }catch{ logout(); } } })();
+</script>
+</body>
+</html>

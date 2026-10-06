@@ -95,7 +95,7 @@ let adminKey=sessionStorage.getItem('to_admin_key')||'';
 // 관리 페이지 목록 (요청 순서대로)
 const BOARDS=[
   {icon:'🥋', title:'도장 소개', desc:'도장 소개 내용 관리', href:'', ready:false},
-  {icon:'📢', title:'공지사항', desc:'공지 등록·수정', href:'', ready:false},
+  {icon:'📢', title:'공지사항', desc:'공지 등록·수정·삭제', href:'/admin-notice', ready:true},
   {icon:'📄', title:'안내문', desc:'안내문 관리', href:'', ready:false},
   {icon:'🗓️', title:'시간표', desc:'수업 시간표 관리', href:'', ready:false},
   {icon:'📍', title:'오시는 길', desc:'위치·지도 관리', href:'', ready:false},

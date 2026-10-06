@@ -130,3 +130,30 @@ export async function ensureSchema(sqlc) {
   await sqlc`CREATE INDEX IF NOT EXISTS uniform_name_pin_idx ON uniform_orders (name, pin)`;
   _schemaReady = true;
 }
+
+// ── 공지사항(posts) ──
+export async function ensurePosts(sqlc) {
+  await sqlc`CREATE TABLE IF NOT EXISTS posts (
+    id BIGSERIAL PRIMARY KEY,
+    board TEXT NOT NULL DEFAULT 'notice',
+    category TEXT NOT NULL DEFAULT '공지',
+    title TEXT NOT NULL,
+    body TEXT NOT NULL DEFAULT '',
+    pinned BOOLEAN NOT NULL DEFAULT false,
+    created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
+    updated_at TIMESTAMPTZ NOT NULL DEFAULT now()
+  )`;
+  await sqlc`CREATE INDEX IF NOT EXISTS posts_board_idx ON posts (board, pinned DESC, created_at DESC)`;
+}
+export function pToRecord(r) {
+  return {
+    id: r.id,
+    board: r.board,
+    카테고리: r.category || '',
+    제목: r.title || '',
+    본문: r.body || '',
+    상단고정: r.pinned === true || r.pinned === 't' || r.pinned === 'true',
+    작성일: r.created_at,
+    수정일: r.updated_at,
+  };
+}

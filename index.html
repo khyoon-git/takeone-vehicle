@@ -101,13 +101,13 @@ a.card:hover{transform:translateY(-3px); box-shadow:0 10px 26px rgba(17,24,39,.1
 // 앞으로 메뉴는 이 배열에 항목만 추가하면 됩니다.
 // ready:true 면 클릭 가능(href로 이동), false 면 '준비중'으로 표시됩니다.
 const MENU=[
+  {icon:'🥋', title:'도장 소개', desc:'테이크원 태권도를 소개합니다', href:'#', ready:false},
+  {icon:'📢', title:'공지사항', desc:'도장 소식과 공지를 확인하세요', href:'/notice', ready:true},
+  {icon:'📄', title:'안내문', desc:'각종 안내 및 서식', href:'#', ready:false},
+  {icon:'🗓️', title:'시간표', desc:'수업 시간 안내', href:'/schedule', ready:true},
+  {icon:'📍', title:'오시는 길', desc:'도장 위치 안내', href:'/directions', ready:true},
   {icon:'🚌', title:'차량 신청', desc:'등·하원 차량 신청 및 조회·수정', href:'/vehicle', ready:true},
   {icon:'👕', title:'단체복 신청', desc:'사이즈·수량 신청 및 조회·수정', href:'/uniform', ready:true},
-  {icon:'📢', title:'공지사항', desc:'도장 소식과 공지를 확인하세요', href:'#', ready:false},
-  {icon:'📄', title:'안내문', desc:'각종 안내 및 서식 다운로드', href:'#', ready:false},
-  {icon:'🗓️', title:'시간표', desc:'수업 시간 안내', href:'/schedule', ready:true},
-  {icon:'🥋', title:'도장 소개', desc:'테이크원 태권도를 소개합니다', href:'#', ready:false},
-  {icon:'📍', title:'오시는 길', desc:'도장 위치 안내', href:'/directions', ready:true},
 ];
 
 document.getElementById('menuGrid').innerHTML = MENU.map(m=>{
