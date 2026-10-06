@@ -12,7 +12,7 @@
 <style>
 :root{
   --bg:#F6F6F8; --ink:#17181C; --muted:#6B7280; --line:#ECECEE;
-  --red:#E11D2E; --red-d:#B01423; --red-tint:#FDECEE; --card:#FFFFFF;
+  --red:#F07A86; --red-d:#E0646F; --red-tint:#FDEFF1; --card:#FFFFFF;
 }
 *{box-sizing:border-box;}
 html,body{margin:0;padding:0;}
@@ -25,7 +25,7 @@ a{color:inherit;text-decoration:none;}
 /* ── HERO ── */
 .hero{
   position:relative; text-align:center;
-  background:radial-gradient(130% 120% at 50% -20%, #FFF3F4 0%, #FFFFFF 55%);
+  background:radial-gradient(130% 120% at 50% -20%, #FFF6F7 0%, #FFFFFF 55%);
   padding:52px 22px 46px; border-bottom:1px solid var(--line);
 }
 .hero::after{content:""; position:absolute; left:0; right:0; bottom:0; height:3px; background:var(--red);}
@@ -43,7 +43,7 @@ a{color:inherit;text-decoration:none;}
   position:relative; display:block; background:var(--card); border:1px solid var(--line);
   border-radius:18px; padding:20px 18px; transition:transform .15s, box-shadow .15s, border-color .15s;
 }
-a.card:hover{transform:translateY(-3px); box-shadow:0 12px 28px rgba(17,24,39,.10); border-color:#F2C2C7;}
+a.card:hover{transform:translateY(-3px); box-shadow:0 12px 28px rgba(17,24,39,.10); border-color:#F8D2D7;}
 .card .ic{
   width:50px;height:50px;border-radius:14px;display:flex;align-items:center;justify-content:center;
   font-size:25px; background:var(--red-tint); margin-bottom:14px;
