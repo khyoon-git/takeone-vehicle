@@ -1,6 +1,6 @@
 // POST /api/settings  { enabled, start, end }  (관리자 전용)
 // start / end 는 epoch ms 숫자 또는 null(빈 문자열)
-import { db, isAdmin, readBody } from './_db.js';
+import { db, isAdmin, readBody, ensureSchema } from './_db.js';
 
 export default async function handler(req, res) {
   if (req.method !== 'POST') {
@@ -11,6 +11,7 @@ export default async function handler(req, res) {
 
   const sql = db();
   try {
+    await ensureSchema(sql);
     const b = await readBody(req);
     const enabled = b.enabled ? '1' : '0';
     const start = (b.start != null && b.start !== '') ? String(Number(b.start)) : '';

@@ -6,11 +6,12 @@
 //   POST /api/uniform { action:'edit', name, pin, id, size, qty | mode:'delete' } (공개, 본인, 열림)
 //   POST /api/uniform { action:'settings', enabled?, sizes? }               (관리자)
 //   POST /api/uniform { action:'admin', mode:'delete'|'delete-all'|'paid'|'edit', ... } (관리자)
-import { db, isAdmin, readBody, clip, getUniformSettings, uToRecord } from './_db.js';
+import { db, isAdmin, readBody, clip, getUniformSettings, uToRecord, ensureSchema } from './_db.js';
 
 export default async function handler(req, res) {
   const sql = db();
   try {
+    await ensureSchema(sql);
     if (req.method === 'GET') {
       const action = (req.query && req.query.action) || 'status';
       if (action === 'list') {

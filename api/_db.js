@@ -105,3 +105,28 @@ export function uToRecord(r) {
     created_at: r.created_at,
   };
 }
+
+// ── 테이블 자동 생성 (수동 SQL 없이 동작하도록) ──
+// CREATE TABLE IF NOT EXISTS 이므로 이미 있으면 아무 일도 하지 않습니다.
+let _schemaReady = false;
+export async function ensureSchema(sqlc) {
+  if (_schemaReady) return;
+  await sqlc`CREATE TABLE IF NOT EXISTS settings (
+    key TEXT PRIMARY KEY,
+    value TEXT NOT NULL DEFAULT ''
+  )`;
+  await sqlc`CREATE TABLE IF NOT EXISTS uniform_orders (
+    id BIGSERIAL PRIMARY KEY,
+    name TEXT NOT NULL,
+    grade TEXT NOT NULL DEFAULT '',
+    building TEXT NOT NULL DEFAULT '',
+    size TEXT NOT NULL DEFAULT '',
+    qty INTEGER NOT NULL DEFAULT 1,
+    depositor TEXT NOT NULL DEFAULT '',
+    pin TEXT NOT NULL,
+    paid BOOLEAN NOT NULL DEFAULT false,
+    created_at TIMESTAMPTZ NOT NULL DEFAULT now()
+  )`;
+  await sqlc`CREATE INDEX IF NOT EXISTS uniform_name_pin_idx ON uniform_orders (name, pin)`;
+  _schemaReady = true;
+}
