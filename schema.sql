@@ -28,3 +28,18 @@ CREATE TABLE IF NOT EXISTS settings (
   key   TEXT PRIMARY KEY,
   value TEXT NOT NULL DEFAULT ''
 );
+
+-- 단체복 신청 저장용
+CREATE TABLE IF NOT EXISTS uniform_orders (
+  id         BIGSERIAL PRIMARY KEY,
+  name       TEXT NOT NULL,              -- 이름
+  grade      TEXT NOT NULL DEFAULT '',   -- 학년
+  building   TEXT NOT NULL DEFAULT '',   -- 소속관 (본관/별관/소양관)
+  size       TEXT NOT NULL DEFAULT '',   -- 사이즈
+  qty        INTEGER NOT NULL DEFAULT 1, -- 수량
+  depositor  TEXT NOT NULL DEFAULT '',   -- 입금자명
+  pin        TEXT NOT NULL,              -- 확인용 PIN 4자리
+  paid       BOOLEAN NOT NULL DEFAULT false, -- 입금확인
+  created_at TIMESTAMPTZ NOT NULL DEFAULT now()
+);
+CREATE INDEX IF NOT EXISTS uniform_name_pin_idx ON uniform_orders (name, pin);

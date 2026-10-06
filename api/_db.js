@@ -75,3 +75,33 @@ export function computeOpen(st) {
   if (st.end && now > st.end) return false;
   return true;
 }
+
+// ── 단체복 신청 설정/변환 ──
+export async function getUniformSettings(sqlc) {
+  try {
+    const rows = await sqlc`SELECT key, value FROM settings WHERE key IN ('uniform_enabled','uniform_sizes')`;
+    const m = {};
+    rows.forEach((r) => { m[r.key] = r.value; });
+    let sizes = [];
+    try { sizes = m.uniform_sizes ? JSON.parse(m.uniform_sizes) : []; } catch { sizes = []; }
+    if (!Array.isArray(sizes)) sizes = [];
+    return { enabled: m.uniform_enabled === '1', sizes };
+  } catch {
+    return { enabled: false, sizes: [] };
+  }
+}
+
+export function uToRecord(r) {
+  return {
+    id: r.id,
+    이름: r.name,
+    학년: r.grade || '',
+    소속관: r.building || '',
+    사이즈: r.size || '',
+    수량: Number(r.qty) || 0,
+    입금자명: r.depositor || '',
+    pin: r.pin,
+    입금확인: r.paid === true || r.paid === 't' || r.paid === 'true',
+    created_at: r.created_at,
+  };
+}

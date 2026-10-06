@@ -1,0 +1,323 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="robots" content="noindex, nofollow">
+<link rel="icon" href="/favicon.svg" type="image/svg+xml">
+<title>단체복 관리 · 테이크원 태권도</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<style>
+:root{--purple:#7C3AED;--blue:#2563EB;--bg:#F1F5F9;--line:#E2E8F0;--ink:#0F172A;--muted:#64748B;--red:#EF4444;--green:#16A34A;}
+*{box-sizing:border-box;}
+html,body{margin:0;padding:0;}
+body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI','Apple SD Gothic Neo','Malgun Gothic',sans-serif;background:var(--bg);color:var(--ink);-webkit-font-smoothing:antialiased;}
+.page{display:none;} .page.active{display:block;}
+/* login */
+.login-page.active{display:flex;min-height:100vh;align-items:center;justify-content:center;padding:24px;}
+.login-card{background:#fff;width:100%;max-width:400px;border-radius:16px;box-shadow:0 10px 40px rgba(15,23,42,.12);padding:36px 32px;}
+.login-icon{font-size:44px;text-align:center;line-height:1;}
+.login-title{font-size:22px;font-weight:800;text-align:center;margin:12px 0 4px;}
+.login-sub{font-size:14px;color:var(--muted);text-align:center;margin-bottom:24px;}
+.field{margin-bottom:12px;}
+.field label{display:block;font-size:13px;font-weight:600;color:var(--muted);margin-bottom:6px;}
+.field .row{display:flex;gap:8px;}
+.input{width:100%;border:1.5px solid var(--line);border-radius:10px;padding:11px 13px;font-size:15px;font-family:inherit;outline:none;color:var(--ink);background:#fff;}
+.input:focus{border-color:var(--purple);}
+.emsg{color:var(--red);font-size:13px;display:none;margin:2px 0 10px;} .emsg.show{display:block;}
+.eye{border:1.5px solid var(--line);border-radius:10px;background:#fff;padding:0 12px;cursor:pointer;font-size:16px;flex-shrink:0;}
+/* buttons */
+.btn{border:none;border-radius:10px;font-family:inherit;font-weight:700;cursor:pointer;display:inline-flex;align-items:center;justify-content:center;gap:6px;padding:10px 15px;font-size:14px;white-space:nowrap;}
+.btn:hover{filter:brightness(.97);}
+.btn-full{width:100%;padding:13px;font-size:15px;}
+.btn-sm{padding:6px 11px;font-size:12.5px;border-radius:8px;}
+.btn-purple{background:var(--purple);color:#fff;} .btn-blue{background:var(--blue);color:#fff;}
+.btn-red{background:var(--red);color:#fff;} .btn-gray{background:#E2E8F0;color:#0F172A;}
+.btn-green{background:var(--green);color:#fff;} .btn-excel{background:#15803D;color:#fff;}
+.btn-ghost{background:#fff;color:#334155;border:1.5px solid var(--line);}
+/* topbar */
+.topbar{position:sticky;top:0;z-index:20;background:#fff;border-bottom:1px solid var(--line);}
+.topbar-in{max-width:1300px;margin:0 auto;padding:13px 24px;display:flex;align-items:center;gap:10px;flex-wrap:wrap;}
+.brand{font-size:17px;font-weight:800;display:flex;align-items:center;gap:10px;}
+.brand .pill{background:var(--purple);color:#fff;font-size:12px;font-weight:800;padding:4px 11px;border-radius:999px;}
+.spacer{flex:1;}
+.container{max-width:1300px;margin:0 auto;padding:20px 24px 60px;}
+.card{background:#fff;border:1px solid var(--line);border-radius:14px;padding:16px 18px;margin-bottom:18px;}
+.card h2{margin:0 0 12px;font-size:15px;font-weight:800;display:flex;align-items:center;justify-content:space-between;}
+.statuspill{font-size:12px;font-weight:800;padding:4px 12px;border-radius:999px;background:#EEF0F4;color:#64748B;}
+.statuspill.open{background:#DCFCE7;color:#15803D;} .statuspill.closed{background:#FEE2E2;color:#B91C1C;}
+.rowflex{display:flex;flex-wrap:wrap;gap:10px;align-items:center;}
+/* sizes */
+.sizechips{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:12px;}
+.sizechip{display:inline-flex;align-items:center;gap:7px;background:#F1F5F9;border:1px solid var(--line);border-radius:999px;padding:7px 10px 7px 13px;font-weight:700;font-size:13.5px;}
+.sizechip button{border:none;background:#CBD5E1;color:#fff;width:18px;height:18px;border-radius:50%;cursor:pointer;font-size:12px;line-height:1;}
+.sizechip.empty{color:var(--muted);font-weight:500;background:transparent;border:none;padding-left:0;}
+/* summary */
+.summary{display:flex;gap:12px;flex-wrap:wrap;margin-bottom:18px;}
+.stat{background:#fff;border:1px solid var(--line);border-radius:12px;padding:12px 18px;min-width:96px;}
+.stat .k{font-size:12px;color:var(--muted);font-weight:700;} .stat .v{font-size:24px;font-weight:800;margin-top:2px;}
+.stat.accent{background:var(--purple);border-color:var(--purple);color:#fff;} .stat.accent .k{color:rgba(255,255,255,.85);}
+.sizesum{display:flex;flex-wrap:wrap;gap:8px;margin-top:4px;}
+.sizesum .s{background:#EEF2FF;color:#4338CA;font-weight:800;font-size:13px;padding:6px 12px;border-radius:10px;}
+/* table */
+.toolbar{display:flex;gap:10px;align-items:center;margin-bottom:12px;flex-wrap:wrap;}
+.search{max-width:280px;}
+.select{border:1.5px solid var(--line);border-radius:10px;padding:10px 12px;font-size:14px;font-family:inherit;background:#fff;color:var(--ink);cursor:pointer;}
+.tablewrap{background:#fff;border:1px solid var(--line);border-radius:14px;overflow:auto;max-height:calc(100vh - 150px);}
+table{width:100%;border-collapse:separate;border-spacing:0;min-width:980px;font-size:13.5px;}
+thead th{position:sticky;top:0;background:#F8FAFC;z-index:5;text-align:left;font-size:12px;font-weight:800;color:var(--muted);padding:12px 12px;border-bottom:1px solid var(--line);white-space:nowrap;}
+tbody td{padding:9px 12px;border-bottom:1px solid #F1F5F9;vertical-align:middle;}
+tbody tr:hover td{background:#FAFAFF;}
+td.nm{font-weight:800;white-space:nowrap;} td.ctr{text-align:center;}
+.tsel{border:1.5px solid var(--line);border-radius:8px;padding:6px 8px;font-size:13px;font-family:inherit;background:#fff;}
+.qtyin{width:58px;border:1.5px solid var(--line);border-radius:8px;padding:6px;font-size:13px;font-family:inherit;text-align:center;}
+.empty{text-align:center;padding:50px 20px;color:var(--muted);}
+.empty-ico{font-size:40px;margin-bottom:10px;}
+/* modal/toast */
+.modal-bg{display:none;position:fixed;inset:0;background:rgba(15,23,42,.5);z-index:100;align-items:center;justify-content:center;padding:20px;}
+.modal-bg.open{display:flex;}
+.modal{background:#fff;border-radius:16px;padding:26px 24px;max-width:400px;width:100%;}
+.modal h3{margin:0 0 8px;font-size:18px;text-align:center;font-weight:800;}
+.modal p{margin:0 0 20px;color:var(--muted);text-align:center;line-height:1.6;}
+.modal-acts{display:grid;gap:8px;}
+.toast{position:fixed;bottom:30px;left:50%;transform:translateX(-50%) translateY(120px);background:rgba(15,23,42,.92);color:#fff;padding:12px 22px;border-radius:24px;font-size:14px;font-weight:600;transition:transform .28s;z-index:200;}
+.toast.show{transform:translateX(-50%) translateY(0);} .toast.ok{background:rgba(22,163,74,.95);}
+</style>
+</head>
+<body>
+
+<!-- LOGIN -->
+<div class="page login-page active" id="page-login">
+  <div class="login-card">
+    <div class="login-icon">👕</div>
+    <div class="login-title">단체복 관리</div>
+    <div class="login-sub">단체복 신청 현황을 관리합니다</div>
+    <div class="field"><label>비밀번호</label>
+      <div class="row">
+        <input class="input" type="password" id="pw" autocomplete="current-password" onkeydown="if(event.key==='Enter')login()">
+        <button class="eye" type="button" onclick="eye('pw')">👁</button>
+      </div>
+    </div>
+    <div class="emsg" id="err-login"></div>
+    <button class="btn btn-purple btn-full" id="loginBtn" onclick="login()">로그인</button>
+    <div style="text-align:center;margin-top:14px;"><a href="/" style="color:var(--muted);font-size:13px;text-decoration:none;">← 홈으로</a></div>
+  </div>
+</div>
+
+<!-- DASHBOARD -->
+<div class="page" id="page-admin">
+  <div class="topbar"><div class="topbar-in">
+    <div class="brand"><span class="pill">👕 테이크원</span> 단체복 관리</div>
+    <span class="spacer"></span>
+    <button class="btn btn-ghost" onclick="loadAll()">🔄 새로고침</button>
+    <button class="btn btn-excel" onclick="exportExcel()">📊 엑셀 다운로드</button>
+    <button class="btn btn-red" onclick="openDel()">🗑 전체삭제</button>
+    <button class="btn btn-ghost" onclick="logout()">로그아웃</button>
+  </div></div>
+
+  <div class="container">
+    <!-- 신청 시작/마감 -->
+    <div class="card">
+      <h2><span>🚦 단체복 신청 접수</span><span class="statuspill" id="statuspill">확인 중…</span></h2>
+      <div class="rowflex">
+        <button class="btn btn-green" onclick="setEnabled(true)">▶ 신청 시작</button>
+        <button class="btn btn-gray" onclick="setEnabled(false)">⏹ 신청 마감</button>
+      </div>
+    </div>
+
+    <!-- 사이즈 설정 -->
+    <div class="card">
+      <h2><span>📏 신청 사이즈 설정</span></h2>
+      <div class="sizechips" id="sizechips"></div>
+      <div class="rowflex">
+        <input class="input search" id="newsize" maxlength="20" placeholder="추가할 사이즈 (예: 100, 110, S, M, L)" onkeydown="if(event.key==='Enter')addSize()">
+        <button class="btn btn-purple btn-sm" onclick="addSize()">+ 추가</button>
+      </div>
+      <div style="font-size:12px;color:var(--muted);margin-top:8px;">· 사이즈를 추가/삭제한 뒤 자동 저장됩니다. 학부모 신청 화면에 바로 반영됩니다.</div>
+    </div>
+
+    <!-- 요약 -->
+    <div class="summary">
+      <div class="stat accent"><div class="k">총 신청 건수</div><div class="v" id="s-count">0</div></div>
+      <div class="stat"><div class="k">총 수량</div><div class="v" id="s-qty">0</div></div>
+      <div class="stat"><div class="k">입금 완료</div><div class="v" id="s-paid">0</div></div>
+      <div class="stat"><div class="k">미입금</div><div class="v" id="s-unpaid">0</div></div>
+    </div>
+    <div class="card">
+      <h2><span>📦 사이즈별 수량</span></h2>
+      <div class="sizesum" id="sizesum"></div>
+    </div>
+
+    <!-- 신청 내역 -->
+    <div class="toolbar">
+      <input class="input search" id="filterName" placeholder="🔍 이름 검색" oninput="renderTable()">
+      <select class="select" id="filterBldg" onchange="renderTable()">
+        <option value="">전체 관</option><option>본관</option><option>별관</option><option>소양관</option>
+      </select>
+      <select class="select" id="filterPaid" onchange="renderTable()">
+        <option value="">입금 전체</option><option value="paid">입금완료</option><option value="unpaid">미입금</option>
+      </select>
+      <span style="color:var(--muted);font-size:13px;">표시 <strong id="shown">0</strong>건</span>
+    </div>
+    <div class="tablewrap">
+      <table>
+        <thead><tr>
+          <th>#</th><th>이름</th><th>학년</th><th>관</th><th>사이즈</th><th>수량</th><th>입금자명</th><th>입금확인</th><th>신청일시</th><th></th>
+        </tr></thead>
+        <tbody id="tbody"></tbody>
+      </table>
+      <div class="empty" id="emptyBox" style="display:none;"><div class="empty-ico">👕</div>신청 내역이 없습니다</div>
+    </div>
+  </div>
+</div>
+
+<div class="modal-bg" id="modal-del"><div class="modal">
+  <h3>⚠️ 전체 삭제</h3><p>모든 단체복 신청 내역을 삭제합니다.<br>되돌릴 수 없습니다.</p>
+  <div class="modal-acts"><button class="btn btn-red btn-full" onclick="deleteAll()">삭제하기</button><button class="btn btn-gray btn-full" onclick="closeDel()">취소</button></div>
+</div></div>
+<div class="toast" id="toast"></div>
+
+<script>
+let adminKey=sessionStorage.getItem('to_admin_key')||'';
+let SIZES=[], ENABLED=false, orders=[], viewOrders=[];
+
+async function api(path,{method='GET',body,auth=false}={}){
+  const headers={}; if(body)headers['Content-Type']='application/json';
+  if(auth&&adminKey)headers['x-admin-key']=adminKey;
+  const res=await fetch(path,{method,headers,body:body?JSON.stringify(body):undefined});
+  let data={}; try{data=await res.json();}catch{}
+  if(!res.ok){const e=new Error(data.error||('요청 실패('+res.status+')'));e.status=res.status;throw e;}
+  return data;
+}
+function eye(id){const el=document.getElementById(id);el.type=el.type==='password'?'text':'password';}
+function showPage(id){document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));document.getElementById('page-'+id).classList.add('active');}
+function showE(id,m){const el=document.getElementById(id);el.textContent=m;el.classList.add('show');}
+let _tt;function toast(m,t=''){const el=document.getElementById('toast');el.textContent=m;el.className='toast show'+(t?' '+t:'');clearTimeout(_tt);_tt=setTimeout(()=>el.className='toast',2600);}
+function esc(s){return String(s==null?'':s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');}
+
+async function login(){
+  const pw=document.getElementById('pw').value;
+  if(!pw)return showE('err-login','비밀번호를 입력해 주세요');
+  const b=document.getElementById('loginBtn');b.disabled=true;b.textContent='확인 중…';
+  try{
+    await api('/api/login',{method:'POST',body:{password:pw}});
+    adminKey=pw;sessionStorage.setItem('to_admin_key',pw);
+    document.getElementById('pw').value='';document.getElementById('err-login').classList.remove('show');
+    showPage('admin');await loadAll();
+  }catch(e){showE('err-login','비밀번호가 올바르지 않습니다');}
+  finally{b.disabled=false;b.textContent='로그인';}
+}
+function logout(){adminKey='';sessionStorage.removeItem('to_admin_key');showPage('login');}
+
+async function loadAll(){
+  try{
+    const st=await api('/api/uniform-status');
+    SIZES=Array.isArray(st.sizes)?st.sizes:[]; ENABLED=!!st.open;
+    renderStatus();renderSizeChips();
+    const r=await api('/api/uniform',{auth:true});
+    orders=r.orders||[];
+    renderSummary();renderTable();
+  }catch(e){ if(e.status===401){logout();showE('err-login','다시 로그인해 주세요');} else toast('⚠️ '+e.message); }
+}
+function renderStatus(){
+  const p=document.getElementById('statuspill');
+  p.textContent=ENABLED?'🟢 신청 열림':'🔴 신청 마감';
+  p.className='statuspill '+(ENABLED?'open':'closed');
+}
+async function setEnabled(v){
+  try{ await api('/api/uniform-settings',{method:'POST',auth:true,body:{enabled:v}}); ENABLED=v; renderStatus(); toast(v?'신청을 시작했습니다':'신청을 마감했습니다','ok'); }
+  catch(e){ if(e.status===401){logout();}else toast('⚠️ '+e.message); }
+}
+function renderSizeChips(){
+  const box=document.getElementById('sizechips');
+  box.innerHTML = SIZES.length? SIZES.map((s,i)=>`<span class="sizechip">${esc(s)}<button onclick="removeSize(${i})" title="삭제">✕</button></span>`).join('')
+    : '<span class="sizechip empty">등록된 사이즈가 없습니다. 아래에서 추가해 주세요.</span>';
+}
+async function saveSizes(){
+  try{ await api('/api/uniform-settings',{method:'POST',auth:true,body:{sizes:SIZES}}); }
+  catch(e){ if(e.status===401){logout();}else toast('⚠️ '+e.message); }
+}
+async function addSize(){
+  const el=document.getElementById('newsize'); const v=el.value.trim();
+  if(!v)return;
+  if(SIZES.includes(v))return toast('이미 있는 사이즈입니다');
+  SIZES.push(v); el.value=''; renderSizeChips(); await saveSizes(); toast('사이즈 추가됨','ok');
+}
+async function removeSize(i){ SIZES.splice(i,1); renderSizeChips(); await saveSizes(); toast('사이즈 삭제됨'); }
+
+function renderSummary(){
+  const totalQty=orders.reduce((a,o)=>a+(o.수량||0),0);
+  const paid=orders.filter(o=>o.입금확인).length;
+  document.getElementById('s-count').textContent=orders.length;
+  document.getElementById('s-qty').textContent=totalQty;
+  document.getElementById('s-paid').textContent=paid;
+  document.getElementById('s-unpaid').textContent=orders.length-paid;
+  // 사이즈별 수량
+  const map={};
+  orders.forEach(o=>{const s=o.사이즈||'(미지정)';map[s]=(map[s]||0)+(o.수량||0);});
+  const order=[...SIZES,...Object.keys(map).filter(k=>!SIZES.includes(k))];
+  const box=document.getElementById('sizesum');
+  const entries=order.filter(s=>map[s]);
+  box.innerHTML=entries.length? entries.map(s=>`<span class="s">${esc(s)} · ${map[s]}개</span>`).join('') : '<span style="color:var(--muted);font-size:13px;">신청 없음</span>';
+}
+function fmtDate(s){ if(!s)return''; const d=new Date(s); if(isNaN(d))return''; const dd=new Date(d.getTime()); return (dd.getMonth()+1)+'/'+dd.getDate()+' '+String(dd.getHours()).padStart(2,'0')+':'+String(dd.getMinutes()).padStart(2,'0'); }
+function sizeOpts(cur){ return SIZES.map(s=>`<option ${s===cur?'selected':''}>${esc(s)}</option>`).join('') + (SIZES.includes(cur)?'':`<option selected>${esc(cur)}</option>`); }
+function renderTable(){
+  const name=document.getElementById('filterName').value.trim().toLowerCase();
+  const bldg=document.getElementById('filterBldg').value;
+  const paidf=document.getElementById('filterPaid').value;
+  viewOrders=orders.filter(o=>(!name||(o.이름||'').toLowerCase().includes(name))&&(!bldg||o.소속관===bldg)&&(!paidf||(paidf==='paid'?o.입금확인:!o.입금확인)));
+  document.getElementById('shown').textContent=viewOrders.length;
+  const tb=document.getElementById('tbody'),em=document.getElementById('emptyBox');
+  if(!viewOrders.length){tb.innerHTML='';em.style.display='';return;}
+  em.style.display='none';
+  tb.innerHTML=viewOrders.map((o,i)=>`<tr>
+    <td>${i+1}</td>
+    <td class="nm">${esc(o.이름)}</td>
+    <td>${esc(o.학년)||'-'}</td>
+    <td>${esc(o.소속관)||'-'}</td>
+    <td><select class="tsel" id="ts-${o.id}">${sizeOpts(o.사이즈)}</select></td>
+    <td><input class="qtyin" id="tq-${o.id}" type="number" min="1" max="99" value="${o.수량}"></td>
+    <td>${esc(o.입금자명)||'-'}</td>
+    <td class="ctr"><input type="checkbox" ${o.입금확인?'checked':''} onchange="togglePaid(${o.id},this.checked)" style="width:18px;height:18px;"></td>
+    <td style="color:var(--muted);white-space:nowrap;">${fmtDate(o.created_at)}</td>
+    <td style="white-space:nowrap;"><button class="btn btn-blue btn-sm" onclick="saveRow(${o.id})">수정</button> <button class="btn btn-red btn-sm" onclick="delRow(${o.id},'${esc((o.이름||'')).replace(/'/g,"\\'")}')">삭제</button></td>
+  </tr>`).join('');
+}
+async function saveRow(id){
+  const size=document.getElementById('ts-'+id).value;
+  const qty=parseInt(document.getElementById('tq-'+id).value,10)||1;
+  try{ await api('/api/uniform-admin',{method:'POST',auth:true,body:{mode:'edit',id,size,qty}}); const o=orders.find(x=>x.id===id); if(o){o.사이즈=size;o.수량=qty;} renderSummary(); toast('수정되었습니다','ok'); }
+  catch(e){ if(e.status===401){logout();}else toast('⚠️ '+e.message); }
+}
+async function togglePaid(id,v){
+  try{ await api('/api/uniform-admin',{method:'POST',auth:true,body:{mode:'paid',id,paid:v}}); const o=orders.find(x=>x.id===id); if(o)o.입금확인=v; renderSummary(); }
+  catch(e){ if(e.status===401){logout();}else toast('⚠️ '+e.message); }
+}
+async function delRow(id,name){
+  if(!confirm(name+' 님의 이 신청을 삭제할까요?'))return;
+  try{ await api('/api/uniform-admin',{method:'POST',auth:true,body:{mode:'delete',id}}); orders=orders.filter(x=>x.id!==id); renderSummary();renderTable(); toast('삭제되었습니다'); }
+  catch(e){ if(e.status===401){logout();}else toast('⚠️ '+e.message); }
+}
+function openDel(){document.getElementById('modal-del').classList.add('open');}
+function closeDel(){document.getElementById('modal-del').classList.remove('open');}
+async function deleteAll(){
+  closeDel();
+  try{ await api('/api/uniform-admin',{method:'POST',auth:true,body:{mode:'delete-all'}}); orders=[]; renderSummary();renderTable(); toast('전체 삭제 완료'); }
+  catch(e){ if(e.status===401){logout();}else toast('⚠️ '+e.message); }
+}
+function exportExcel(){
+  if(!orders.length)return toast('신청 내역이 없습니다');
+  const sorted=[...orders].sort((a,b)=>(a.이름||'').localeCompare(b.이름||'','ko'));
+  const data=sorted.map((o,i)=>({번호:i+1,이름:o.이름,학년:o.학년||'',소속관:o.소속관||'',사이즈:o.사이즈||'',수량:o.수량||0,입금자명:o.입금자명||'',입금확인:o.입금확인?'완료':'미입금',신청일시:fmtDate(o.created_at)}));
+  const wb=XLSX.utils.book_new(),ws=XLSX.utils.json_to_sheet(data);
+  ws['!cols']=[{wch:5},{wch:10},{wch:12},{wch:8},{wch:8},{wch:6},{wch:10},{wch:8},{wch:12}];
+  XLSX.utils.book_append_sheet(wb,ws,'단체복신청');
+  const t=new Date(),fn=`단체복신청_${t.getFullYear()}${String(t.getMonth()+1).padStart(2,'0')}${String(t.getDate()).padStart(2,'0')}.xlsx`;
+  XLSX.writeFile(wb,fn);toast('📊 엑셀 다운로드 완료','ok');
+}
+
+(async()=>{ if(adminKey){ try{ await api('/api/login',{method:'POST',body:{password:adminKey}}); showPage('admin'); await loadAll(); }catch{ logout(); } } })();
+</script>
+</body>
+</html>
