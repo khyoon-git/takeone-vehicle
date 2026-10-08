@@ -102,6 +102,8 @@ export function uToRecord(r) {
     입금자명: r.depositor || '',
     pin: r.pin,
     입금확인: r.paid === true || r.paid === 't' || r.paid === 'true',
+    연락확인: r.contacted === true || r.contacted === 't' || r.contacted === 'true',
+    착용사진: r.photo === true || r.photo === 't' || r.photo === 'true',
     created_at: r.created_at,
   };
 }
@@ -128,6 +130,9 @@ export async function ensureSchema(sqlc) {
     created_at TIMESTAMPTZ NOT NULL DEFAULT now()
   )`;
   await sqlc`CREATE INDEX IF NOT EXISTS uniform_name_pin_idx ON uniform_orders (name, pin)`;
+  // 기존 테이블에 없는 컬럼은 여기서 보강(연락확인/착용사진)
+  await sqlc`ALTER TABLE uniform_orders ADD COLUMN IF NOT EXISTS contacted BOOLEAN NOT NULL DEFAULT false`;
+  await sqlc`ALTER TABLE uniform_orders ADD COLUMN IF NOT EXISTS photo BOOLEAN NOT NULL DEFAULT false`;
   _schemaReady = true;
 }
 

@@ -104,6 +104,8 @@ export default async function handler(req, res) {
         if (!id) return res.status(400).json({ error: 'id required' });
         if (b.mode === 'delete') { await sql`DELETE FROM uniform_orders WHERE id=${id}`; return res.status(200).json({ ok: true }); }
         if (b.mode === 'paid') { await sql`UPDATE uniform_orders SET paid=${!!b.paid} WHERE id=${id}`; return res.status(200).json({ ok: true }); }
+        if (b.mode === 'contacted') { await sql`UPDATE uniform_orders SET contacted=${!!b.contacted} WHERE id=${id}`; return res.status(200).json({ ok: true }); }
+        if (b.mode === 'photo') { await sql`UPDATE uniform_orders SET photo=${!!b.photo} WHERE id=${id}`; return res.status(200).json({ ok: true }); }
         if (b.mode === 'edit') {
           const size = clip(b.size, 20).trim();
           const qty = Math.max(1, Math.min(99, parseInt(b.qty, 10) || 0));

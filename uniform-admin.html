@@ -64,7 +64,7 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI','Apple SD Gothic Ne
 .search{max-width:280px;}
 .select{border:1.5px solid var(--line);border-radius:10px;padding:10px 12px;font-size:14px;font-family:inherit;background:#fff;color:var(--ink);cursor:pointer;}
 .tablewrap{background:#fff;border:1px solid var(--line);border-radius:14px;overflow:auto;max-height:calc(100vh - 150px);}
-table{width:100%;border-collapse:separate;border-spacing:0;min-width:980px;font-size:13.5px;}
+table{width:100%;border-collapse:separate;border-spacing:0;min-width:1120px;font-size:13.5px;}
 thead th{position:sticky;top:0;background:#F8FAFC;z-index:5;text-align:left;font-size:12px;font-weight:800;color:var(--muted);padding:12px 12px;border-bottom:1px solid var(--line);white-space:nowrap;}
 tbody td{padding:9px 12px;border-bottom:1px solid #F1F5F9;vertical-align:middle;}
 tbody tr:hover td{background:#FAFAFF;}
@@ -163,7 +163,7 @@ td.nm{font-weight:800;white-space:nowrap;} td.ctr{text-align:center;}
     <div class="tablewrap">
       <table>
         <thead><tr>
-          <th>#</th><th>이름</th><th>학년</th><th>관</th><th>사이즈</th><th>수량</th><th>입금자명</th><th>입금확인</th><th>신청일시</th><th></th>
+          <th>#</th><th>이름</th><th>학년</th><th>관</th><th>사이즈</th><th>수량</th><th>입금자명</th><th>입금확인</th><th>연락확인</th><th>착용사진</th><th>신청일시</th><th></th>
         </tr></thead>
         <tbody id="tbody"></tbody>
       </table>
@@ -280,7 +280,9 @@ function renderTable(){
     <td><select class="tsel" id="ts-${o.id}">${sizeOpts(o.사이즈)}</select></td>
     <td><input class="qtyin" id="tq-${o.id}" type="number" min="1" max="99" value="${o.수량}"></td>
     <td>${esc(o.입금자명)||'-'}</td>
-    <td class="ctr"><input type="checkbox" ${o.입금확인?'checked':''} onchange="togglePaid(${o.id},this.checked)" style="width:18px;height:18px;"></td>
+    <td class="ctr"><input type="checkbox" ${o.입금확인?'checked':''} onchange="toggleFlag(${o.id},'paid',this.checked)" style="width:18px;height:18px;"></td>
+    <td class="ctr"><input type="checkbox" ${o.연락확인?'checked':''} onchange="toggleFlag(${o.id},'contacted',this.checked)" style="width:18px;height:18px;"></td>
+    <td class="ctr"><input type="checkbox" ${o.착용사진?'checked':''} onchange="toggleFlag(${o.id},'photo',this.checked)" style="width:18px;height:18px;"></td>
     <td style="color:var(--muted);white-space:nowrap;">${fmtDate(o.created_at)}</td>
     <td style="white-space:nowrap;"><button class="btn btn-blue btn-sm" onclick="saveRow(${o.id})">수정</button> <button class="btn btn-red btn-sm" onclick="delRow(${o.id},'${esc((o.이름||'')).replace(/'/g,"\\'")}')">삭제</button></td>
   </tr>`).join('');
@@ -291,8 +293,9 @@ async function saveRow(id){
   try{ await api('/api/uniform',{method:'POST',auth:true,body:{action:'admin',mode:'edit',id,size,qty}}); const o=orders.find(x=>x.id===id); if(o){o.사이즈=size;o.수량=qty;} renderSummary(); toast('수정되었습니다','ok'); }
   catch(e){ if(e.status===401){logout();}else toast('⚠️ '+e.message); }
 }
-async function togglePaid(id,v){
-  try{ await api('/api/uniform',{method:'POST',auth:true,body:{action:'admin',mode:'paid',id,paid:v}}); const o=orders.find(x=>x.id===id); if(o)o.입금확인=v; renderSummary(); }
+const FLAG_FIELD={paid:'입금확인',contacted:'연락확인',photo:'착용사진'};
+async function toggleFlag(id,mode,v){
+  try{ await api('/api/uniform',{method:'POST',auth:true,body:{action:'admin',mode,id,[mode]:v}}); const o=orders.find(x=>x.id===id); if(o)o[FLAG_FIELD[mode]]=v; renderSummary(); }
   catch(e){ if(e.status===401){logout();}else toast('⚠️ '+e.message); }
 }
 async function delRow(id,name){
@@ -310,9 +313,9 @@ async function deleteAll(){
 function exportExcel(){
   if(!orders.length)return toast('신청 내역이 없습니다');
   const sorted=[...orders].sort((a,b)=>(a.이름||'').localeCompare(b.이름||'','ko'));
-  const data=sorted.map((o,i)=>({번호:i+1,이름:o.이름,학년:o.학년||'',소속관:o.소속관||'',사이즈:o.사이즈||'',수량:o.수량||0,입금자명:o.입금자명||'',입금확인:o.입금확인?'완료':'미입금',신청일시:fmtDate(o.created_at)}));
+  const data=sorted.map((o,i)=>({번호:i+1,이름:o.이름,학년:o.학년||'',소속관:o.소속관||'',사이즈:o.사이즈||'',수량:o.수량||0,입금자명:o.입금자명||'',입금확인:o.입금확인?'완료':'미입금',연락확인:o.연락확인?'완료':'미확인',착용사진:o.착용사진?'완료':'미제출',신청일시:fmtDate(o.created_at)}));
   const wb=XLSX.utils.book_new(),ws=XLSX.utils.json_to_sheet(data);
-  ws['!cols']=[{wch:5},{wch:10},{wch:12},{wch:8},{wch:8},{wch:6},{wch:10},{wch:8},{wch:12}];
+  ws['!cols']=[{wch:5},{wch:10},{wch:12},{wch:8},{wch:8},{wch:6},{wch:10},{wch:8},{wch:8},{wch:8},{wch:12}];
   XLSX.utils.book_append_sheet(wb,ws,'단체복신청');
   const t=new Date(),fn=`단체복신청_${t.getFullYear()}${String(t.getMonth()+1).padStart(2,'0')}${String(t.getDate()).padStart(2,'0')}.xlsx`;
   XLSX.writeFile(wb,fn);toast('📊 엑셀 다운로드 완료','ok');
